@@ -235,11 +235,12 @@ const App = () => {
   */
 
   const createTournament = useCallback(() => {
-    alert('createTournament called! newTournamentName: ' + newTournamentName);
+    // SUPER MINIMAL VERSION - endast alert för att bekräfta att funktionen körs
+    alert('Tournament would be created with name: ' + newTournamentName);
     
+    // KOMMENTERAT UT ALLT SOM KAN ORSAKA PROBLEM:
+    /*
     if (newTournamentName.trim()) {
-      alert('Creating tournament: ' + newTournamentName.trim());
-      
       const newTournament = {
         id: Date.now().toString(),
         name: newTournamentName.trim(),
@@ -250,20 +251,11 @@ const App = () => {
         currentPhase: 'setup',
         currentRound: 0
       };
-      
-      alert('About to update tournaments state...');
       setTournaments(prev => [...prev, newTournament]);
-      
-      alert('State updated! Tournament should be visible now!');
-      
-      // KOMMENTERAT UT DE PROBLEMATISKA RADERNA:
-      // setNewTournamentName('');
-      // setIsCreateModalOpen(false);
-      
-      alert('Tournament creation completed without clearing/closing!');
-    } else {
-      alert('Tournament name is empty!');
+      setNewTournamentName('');
+      setIsCreateModalOpen(false);
     }
+    */
   }, [newTournamentName, tournamentSettings]);
 
   const deleteTournament = useCallback((tournamentId) => {
