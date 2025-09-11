@@ -254,11 +254,13 @@ const App = () => {
       alert('About to update tournaments state...');
       setTournaments(prev => [...prev, newTournament]);
       
-      alert('About to clear name and close modal...');
-      setNewTournamentName('');
-      setIsCreateModalOpen(false);
+      alert('State updated! Tournament should be visible now!');
       
-      alert('Tournament creation completed!');
+      // KOMMENTERAT UT DE PROBLEMATISKA RADERNA:
+      // setNewTournamentName('');
+      // setIsCreateModalOpen(false);
+      
+      alert('Tournament creation completed without clearing/closing!');
     } else {
       alert('Tournament name is empty!');
     }
