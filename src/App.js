@@ -1,67 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
-// Add CSS animations with better browser support
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes float {
-    0%, 100% { 
-      transform: translateY(0px); 
-      -webkit-transform: translateY(0px);
-    }
-    50% { 
-      transform: translateY(-20px); 
-      -webkit-transform: translateY(-20px);
-    }
-  }
-  @keyframes bounce {
-    0%, 100% { 
-      transform: translateY(0); 
-      -webkit-transform: translateY(0);
-    }
-    50% { 
-      transform: translateY(-10px); 
-      -webkit-transform: translateY(-10px);
-    }
-  }
-  @keyframes pulse {
-    0%, 100% { 
-      transform: scale(1); 
-      -webkit-transform: scale(1);
-    }
-    50% { 
-      transform: scale(1.1); 
-      -webkit-transform: scale(1.1);
-    }
-  }
-  @keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes slideIn {
-    0% { 
-      opacity: 0; 
-      transform: translateY(-50px) scale(0.9); 
-      -webkit-transform: translateY(-50px) scale(0.9);
-    }
-    100% { 
-      opacity: 1; 
-      transform: translateY(0) scale(1); 
-      -webkit-transform: translateY(0) scale(1);
-    }
-  }
-  .gradient-bg {
-    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-    -webkit-animation: gradient 15s ease infinite;
-  }
-  * {
-    box-sizing: border-box;
-  }
-`;
+// Add CSS animations with better browser support - RUN ONLY ONCE
 if (!document.getElementById('boule-styles')) {
+  const styleSheet = document.createElement('style');
   styleSheet.id = 'boule-styles';
+  styleSheet.textContent = `
+    @keyframes float {
+      0%, 100% { 
+        transform: translateY(0px); 
+        -webkit-transform: translateY(0px);
+      }
+      50% { 
+        transform: translateY(-20px); 
+        -webkit-transform: translateY(-20px);
+      }
+    }
+    @keyframes bounce {
+      0%, 100% { 
+        transform: translateY(0); 
+        -webkit-transform: translateY(0);
+      }
+      50% { 
+        transform: translateY(-10px); 
+        -webkit-transform: translateY(-10px);
+      }
+    }
+    @keyframes pulse {
+      0%, 100% { 
+        transform: scale(1); 
+        -webkit-transform: scale(1);
+      }
+      50% { 
+        transform: scale(1.1); 
+        -webkit-transform: scale(1.1);
+      }
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes slideIn {
+      0% { 
+        opacity: 0; 
+        transform: translateY(-50px) scale(0.9); 
+        -webkit-transform: translateY(-50px) scale(0.9);
+      }
+      100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+        -webkit-transform: translateY(0) scale(1);
+      }
+    }
+    .gradient-bg {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      -webkit-animation: gradient 15s ease infinite;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  `;
   document.head.appendChild(styleSheet);
 }
 
@@ -106,7 +106,7 @@ const App = () => {
     }
   }, [tournaments]);
 
-  const createTournament = () => {
+  const createTournament = useCallback(() => {
     if (newTournamentName.trim()) {
       const newTournament = {
         id: Date.now().toString(),
@@ -118,30 +118,30 @@ const App = () => {
         currentPhase: 'setup',
         currentRound: 0
       };
-      setTournaments([...tournaments, newTournament]);
+      setTournaments(prev => [...prev, newTournament]);
       setNewTournamentName('');
       setIsCreateModalOpen(false);
     }
-  };
+  }, [newTournamentName, tournamentSettings]);
 
-  const deleteTournament = (tournamentId) => {
+  const deleteTournament = useCallback((tournamentId) => {
     if (window.confirm('Är du säker på att du vill radera denna turnering?')) {
-      setTournaments(tournaments.filter(t => t.id !== tournamentId));
+      setTournaments(prev => prev.filter(t => t.id !== tournamentId));
     }
-  };
+  }, []);
 
-  const openTournament = (tournamentId) => {
+  const openTournament = useCallback((tournamentId) => {
     setSelectedTournamentId(tournamentId);
     setCurrentView('tournament');
-  };
+  }, []);
 
-  const goToDashboard = () => {
+  const goToDashboard = useCallback(() => {
     setCurrentView('dashboard');
     setSelectedTournamentId(null);
-  };
+  }, []);
 
   // Förbättrade Print-funktioner med spelare, ranking och licensnummer
-  const generatePrintContent = (tournament, type) => {
+  const generatePrintContent = useCallback((tournament, type) => {
     const timestamp = new Date().toLocaleString('sv-SE');
     
     const baseStyles = `
@@ -197,17 +197,17 @@ const App = () => {
     `;
 
     return content;
-  };
+  }, []);
 
-  const handlePrint = (tournament) => {
+  const handlePrint = useCallback((tournament) => {
     const content = generatePrintContent(tournament, printOptions.format);
     const printWindow = window.open('', '_blank');
     printWindow.document.write(content);
     printWindow.document.close();
     printWindow.print();
-  };
+  }, [generatePrintContent, printOptions.format]);
 
-  // Button Component
+  // Button Component - Enkel och stabil
   const Button = ({ children, onClick, variant = 'primary', disabled, style = {} }) => {
     const variants = {
       primary: { 
@@ -267,7 +267,7 @@ const App = () => {
     );
   };
 
-  // Input Component
+  // Input Component - Enkel och stabil
   const Input = ({ value, onChange, placeholder, type = 'text', style = {} }) => {
     return (
       <input
@@ -300,7 +300,7 @@ const App = () => {
     );
   };
 
-  // Select Component
+  // Select Component - Enkel och stabil
   const Select = ({ value, onChange, options, style = {} }) => {
     return (
       <select
@@ -336,25 +336,78 @@ const App = () => {
     );
   };
 
-  // Modal Component
-  const Modal = ({ isOpen, onClose, title, children }) => {
+  // Isolerad Tournament Name Input för att förhindra re-render problem
+  const TournamentNameInput = useCallback(({ value, onChange, placeholder }) => {
+    const handleChange = useCallback((e) => {
+      onChange(e.target.value);
+    }, [onChange]);
+
+    const handleFocus = useCallback((e) => {
+      e.target.style.borderColor = '#3b82f6';
+      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+      e.target.style.background = 'white';
+    }, []);
+
+    const handleBlur = useCallback((e) => {
+      e.target.style.borderColor = '#e2e8f0';
+      e.target.style.boxShadow = 'none';
+      e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+    }, []);
+
+    return (
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        autoFocus
+        style={{
+          width: '100%',
+          padding: '12px 16px',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          fontSize: '16px',
+          outline: 'none',
+          transition: 'all 0.3s ease',
+          background: 'rgba(255, 255, 255, 0.9)'
+        }}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+      />
+    );
+  }, []);
+
+  // Stabil onChange handler för tournament name
+  const handleTournamentNameChange = useCallback((newValue) => {
+    setNewTournamentName(newValue);
+  }, []);
+
+  // Modal Component - Stabil och enkel
+  const Modal = useCallback(({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.6)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        zIndex: 50,
-        backdropFilter: 'blur(8px)'
-      }}>
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+          backdropFilter: 'blur(8px)'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div style={{
           background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
           borderRadius: '24px',
@@ -412,7 +465,7 @@ const App = () => {
         </div>
       </div>
     );
-  };
+  }, []);
 
   // Dashboard View
   if (currentView === 'dashboard') {
@@ -889,9 +942,9 @@ const App = () => {
               }}>
                 Tävlingsnamn
               </label>
-              <Input
+              <TournamentNameInput
                 value={newTournamentName}
-                onChange={setNewTournamentName}
+                onChange={handleTournamentNameChange}
                 placeholder="T.ex. Sommar-cupen 2024"
               />
             </div>
