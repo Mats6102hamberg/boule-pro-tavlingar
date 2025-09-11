@@ -198,6 +198,7 @@ const App = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
   const [printOptions, setPrintOptions] = useState({
     type: 'ranking',
     includeLogo: true,
@@ -210,6 +211,12 @@ const App = () => {
     ageCategory: 'öppen',
     swissRounds: 3,
     teamsPerPool: 3
+  });
+  const [newTeam, setNewTeam] = useState({
+    name: '',
+    players: ['', ''],
+    licenseNumber: '',
+    contactInfo: ''
   });
 
   // Ladda data från localStorage
@@ -264,6 +271,47 @@ const App = () => {
   const goToDashboard = useCallback(() => {
     setCurrentView('dashboard');
     setSelectedTournamentId(null);
+  }, []);
+
+  const addTeam = useCallback(() => {
+    if (newTeam.name.trim() && newTeam.players.some(p => p.trim())) {
+      const tournament = tournaments.find(t => t.id === selectedTournamentId);
+      if (tournament) {
+        const updatedTournament = {
+          ...tournament,
+          teams: [...tournament.teams, {
+            id: Date.now().toString(),
+            name: newTeam.name.trim(),
+            players: newTeam.players.filter(p => p.trim()),
+            licenseNumber: newTeam.licenseNumber.trim(),
+            contactInfo: newTeam.contactInfo.trim(),
+            wins: 0,
+            losses: 0,
+            points: 0,
+            buchholz: 0
+          }]
+        };
+        
+        setTournaments(prev => prev.map(t => 
+          t.id === selectedTournamentId ? updatedTournament : t
+        ));
+        
+        // Reset form
+        setNewTeam({
+          name: '',
+          players: ['', ''],
+          licenseNumber: '',
+          contactInfo: ''
+        });
+        setIsAddTeamModalOpen(false);
+      }
+    }
+  }, [newTeam, selectedTournamentId, tournaments]);
+
+  const updateTeamPlayers = useCallback((teamType) => {
+    const playerCount = teamType === 'singel' ? 1 : teamType === 'dubbel' ? 2 : 3;
+    const newPlayers = Array(playerCount).fill('');
+    setNewTeam(prev => ({ ...prev, players: newPlayers }));
   }, []);
 
   // Förbättrade Print-funktioner med spelare, ranking och licensnummer
@@ -893,6 +941,192 @@ const App = () => {
           </div>
         </div>
 
+        {/* Add Team Modal */}
+        <Modal
+          isOpen={isAddTeamModalOpen}
+          onClose={() => setIsAddTeamModalOpen(false)}
+          title="Lägg till nytt lag"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Lagnamn *
+              </label>
+              <input
+                type="text"
+                value={newTeam.name}
+                onChange={(e) => setNewTeam({...newTeam, name: e.target.value})}
+                placeholder="T.ex. Boule Stjärnorna"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Spelare *
+              </label>
+              {newTeam.players.map((player, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  value={player}
+                  onChange={(e) => {
+                    const updatedPlayers = [...newTeam.players];
+                    updatedPlayers[index] = e.target.value;
+                    setNewTeam({...newTeam, players: updatedPlayers});
+                  }}
+                  placeholder={`Spelare ${index + 1}`}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                    marginBottom: index < newTeam.players.length - 1 ? '8px' : '0'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              ))}
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Licensnummer (valfritt)
+              </label>
+              <input
+                type="text"
+                value={newTeam.licenseNumber}
+                onChange={(e) => setNewTeam({...newTeam, licenseNumber: e.target.value})}
+                placeholder="T.ex. 12345"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Kontaktinfo (valfritt)
+              </label>
+              <input
+                type="text"
+                value={newTeam.contactInfo}
+                onChange={(e) => setNewTeam({...newTeam, contactInfo: e.target.value})}
+                placeholder="T.ex. telefon eller e-post"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              paddingTop: '16px'
+            }}>
+              <Button 
+                onClick={addTeam}
+                style={{ flex: 1 }}
+                disabled={!newTeam.name.trim() || !newTeam.players.some(p => p.trim())}
+              >
+                Lägg till lag
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  setIsAddTeamModalOpen(false);
+                  setNewTeam({
+                    name: '',
+                    players: ['', ''],
+                    licenseNumber: '',
+                    contactInfo: ''
+                  });
+                }}
+                style={{ flex: 1 }}
+              >
+                Avbryt
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
         {/* Create Tournament Modal */}
         <Modal
           isOpen={isCreateModalOpen}
@@ -1418,7 +1652,10 @@ const App = () => {
             marginBottom: '40px'
           }}>
             <button
-              onClick={() => alert('Här skulle du kunna lägga till lag:\n\n• Lagnamn\n• Spelarnamn\n• Licensnummer\n• Kontaktinfo\n\nI en fullständig version skulle detta öppna en modal för lagregistrering.')}
+              onClick={() => {
+                setIsAddTeamModalOpen(true);
+                updateTeamPlayers(tournament.settings.teamType);
+              }}
               style={{
                 background: 'linear-gradient(45deg, #10b981, #059669)',
                 color: 'white',
@@ -1546,6 +1783,115 @@ const App = () => {
             </div>
           </div>
 
+          {/* Teams List */}
+          {tournament.teams.length > 0 && (
+            <div style={{
+              marginTop: '30px',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{
+                margin: '0 0 20px 0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1e293b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                👥 Anmälda lag ({tournament.teams.length})
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '16px'
+              }}>
+                {tournament.teams.map((team, index) => (
+                  <div
+                    key={team.id}
+                    style={{
+                      background: 'white',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '8px'
+                    }}>
+                      <h4 style={{
+                        margin: 0,
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: '#1e293b'
+                      }}>
+                        {index + 1}. {team.name}
+                      </h4>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Vill du ta bort laget "${team.name}"?`)) {
+                            const updatedTournament = {
+                              ...tournament,
+                              teams: tournament.teams.filter(t => t.id !== team.id)
+                            };
+                            setTournaments(prev => prev.map(t => 
+                              t.id === selectedTournamentId ? updatedTournament : t
+                            ));
+                          }
+                        }}
+                        style={{
+                          background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          width: '24px',
+                          height: '24px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#64748b',
+                      marginBottom: '4px'
+                    }}>
+                      <strong>Spelare:</strong> {team.players.join(', ')}
+                    </div>
+                    {team.licenseNumber && (
+                      <div style={{
+                        fontSize: '14px',
+                        color: '#64748b',
+                        marginBottom: '4px'
+                      }}>
+                        <strong>Licens:</strong> {team.licenseNumber}
+                      </div>
+                    )}
+                    {team.contactInfo && (
+                      <div style={{
+                        fontSize: '14px',
+                        color: '#64748b'
+                      }}>
+                        <strong>Kontakt:</strong> {team.contactInfo}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {tournament.teams.length === 0 && (
             <div style={{
               textAlign: 'center',
@@ -1563,7 +1909,10 @@ const App = () => {
                 Börja med att lägga till lag för att kunna starta turneringen.
               </p>
               <button
-                onClick={() => alert('Här skulle du kunna lägga till ditt första lag!')}
+                onClick={() => {
+                  setIsAddTeamModalOpen(true);
+                  updateTeamPlayers(tournament.settings.teamType);
+                }}
                 style={{
                   background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
                   color: 'white',
