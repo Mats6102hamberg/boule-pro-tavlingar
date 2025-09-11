@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Add CSS animations with better browser support - RUN ONLY ONCE
 if (!document.getElementById('boule-styles')) {
@@ -267,39 +267,6 @@ const App = () => {
     );
   };
 
-  // Input Component - Enkel och stabil
-  const Input = ({ value, onChange, placeholder, type = 'text', style = {} }) => {
-    return (
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          fontSize: '16px',
-          outline: 'none',
-          transition: 'all 0.3s ease',
-          background: 'rgba(255, 255, 255, 0.9)',
-          ...style
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = '#3b82f6';
-          e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-          e.target.style.background = 'white';
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = '#e2e8f0';
-          e.target.style.boxShadow = 'none';
-          e.target.style.background = 'rgba(255, 255, 255, 0.9)';
-        }}
-      />
-    );
-  };
-
   // Select Component - Enkel och stabil
   const Select = ({ value, onChange, options, style = {} }) => {
     return (
@@ -337,22 +304,22 @@ const App = () => {
   };
 
   // Isolerad Tournament Name Input för att förhindra re-render problem
-  const TournamentNameInput = useCallback(({ value, onChange, placeholder }) => {
-    const handleChange = useCallback((e) => {
+  const TournamentNameInput = React.memo(({ value, onChange, placeholder }) => {
+    const handleChange = (e) => {
       onChange(e.target.value);
-    }, [onChange]);
+    };
 
-    const handleFocus = useCallback((e) => {
+    const handleFocus = (e) => {
       e.target.style.borderColor = '#3b82f6';
       e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
       e.target.style.background = 'white';
-    }, []);
+    };
 
-    const handleBlur = useCallback((e) => {
+    const handleBlur = (e) => {
       e.target.style.borderColor = '#e2e8f0';
       e.target.style.boxShadow = 'none';
       e.target.style.background = 'rgba(255, 255, 255, 0.9)';
-    }, []);
+    };
 
     return (
       <input
@@ -375,7 +342,7 @@ const App = () => {
         onBlur={handleBlur}
       />
     );
-  }, []);
+  });
 
   // Stabil onChange handler för tournament name
   const handleTournamentNameChange = useCallback((newValue) => {
