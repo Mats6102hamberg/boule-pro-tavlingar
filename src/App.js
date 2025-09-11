@@ -944,7 +944,10 @@ const App = () => {
         {/* Add Team Modal */}
         <Modal
           isOpen={isAddTeamModalOpen}
-          onClose={() => setIsAddTeamModalOpen(false)}
+          onClose={() => {
+            console.log('Stänger team modal');
+            setIsAddTeamModalOpen(false);
+          }}
           title="Lägg till nytt lag"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1653,8 +1656,12 @@ const App = () => {
           }}>
             <button
               onClick={() => {
+                console.log('Klickade på lägg till lag (huvudknapp)');
+                console.log('Tournament:', tournament);
+                const teamType = tournament?.settings?.teamType || 'dubbel';
+                console.log('Team type:', teamType);
+                updateTeamPlayers(teamType);
                 setIsAddTeamModalOpen(true);
-                updateTeamPlayers(tournament.settings.teamType);
               }}
               style={{
                 background: 'linear-gradient(45deg, #10b981, #059669)',
@@ -1910,8 +1917,12 @@ const App = () => {
               </p>
               <button
                 onClick={() => {
+                  console.log('Klickade på lägg till första laget');
+                  console.log('Tournament:', tournament);
+                  const teamType = tournament?.settings?.teamType || 'dubbel';
+                  console.log('Team type:', teamType);
+                  updateTeamPlayers(teamType);
                   setIsAddTeamModalOpen(true);
-                  updateTeamPlayers(tournament.settings.teamType);
                 }}
                 style={{
                   background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
