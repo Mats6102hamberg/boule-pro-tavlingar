@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Add CSS animations with better browser support - RUN ONLY ONCE
+// Add CSS animations with better browser support - RUN ONLY ONCE - Updated
 if (!document.getElementById('boule-styles')) {
   const styleSheet = document.createElement('style');
   styleSheet.id = 'boule-styles';
