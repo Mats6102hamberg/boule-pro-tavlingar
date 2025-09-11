@@ -334,7 +334,7 @@ const App = () => {
   }, [generatePrintContent, printOptions.format]);
 
   // Button Component - Enkel och stabil
-  const Button = ({ children, onClick, variant = 'primary', disabled, style = {} }) => {
+  const Button = ({ children, onClick, variant = 'primary', disabled, style = {}, type = 'button' }) => {
     const variants = {
       primary: { 
         background: 'linear-gradient(45deg, #3b82f6, #1e40af)',
@@ -360,7 +360,7 @@ const App = () => {
     
     return (
       <button
-        type="button"
+        type={type}
         onClick={onClick}
         disabled={disabled}
         style={{
@@ -899,7 +899,14 @@ const App = () => {
           onClose={() => setIsCreateModalOpen(false)}
           title="Skapa ny tävling"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              createTournament();
+            }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+          >
             <div>
               <label style={{
                 display: 'block',
@@ -1009,11 +1016,7 @@ const App = () => {
               paddingTop: '16px'
             }}>
               <Button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  createTournament();
-                }} 
+                type="submit"
                 style={{ flex: 1 }}
                 disabled={!newTournamentName.trim()}
               >
@@ -1031,7 +1034,7 @@ const App = () => {
                 Avbryt
               </Button>
             </div>
-          </div>
+          </form>
         </Modal>
 
         {/* Instructions Modal */}
