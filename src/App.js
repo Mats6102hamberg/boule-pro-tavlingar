@@ -1018,15 +1018,12 @@ const App = () => {
             }}>
               <Button 
                 onClick={(e) => {
-                  alert('Button clicked! Preventing default...');
+                  alert('Button clicked! Name: ' + newTournamentName);
                   e.preventDefault();
                   e.stopPropagation();
-                  alert('About to call createTournament...');
                   createTournament();
-                  alert('createTournament call completed!');
                 }}
                 style={{ flex: 1 }}
-                disabled={!newTournamentName.trim()}
               >
                 Skapa tävling
               </Button>
