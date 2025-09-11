@@ -227,12 +227,23 @@ const App = () => {
 
   // Spara data till localStorage
   useEffect(() => {
+    console.log('localStorage useEffect triggered, tournaments:', tournaments);
     if (tournaments.length >= 0) {
-      localStorage.setItem('boule-pro-tournaments', JSON.stringify({ tournaments }));
+      try {
+        const dataToSave = JSON.stringify({ tournaments });
+        console.log('Saving to localStorage:', dataToSave);
+        localStorage.setItem('boule-pro-tournaments', dataToSave);
+        console.log('localStorage save successful');
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
     }
   }, [tournaments]);
 
   const createTournament = useCallback(() => {
+    console.log('createTournament called, newTournamentName:', newTournamentName);
+    console.log('Current tournaments before create:', tournaments);
+    
     if (newTournamentName.trim()) {
       const newTournament = {
         id: Date.now().toString(),
@@ -244,10 +255,24 @@ const App = () => {
         currentPhase: 'setup',
         currentRound: 0
       };
-      setTournaments(prev => [...prev, newTournament]);
+      
+      console.log('Creating new tournament:', newTournament);
+      
+      setTournaments(prev => {
+        console.log('Previous tournaments:', prev);
+        const newTournaments = [...prev, newTournament];
+        console.log('New tournaments array:', newTournaments);
+        return newTournaments;
+      });
+      
       setNewTournamentName('');
       setIsCreateModalOpen(false);
+      
+      console.log('Tournament creation complete');
+    } else {
+      console.log('Tournament name is empty, not creating');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newTournamentName, tournamentSettings]);
 
   const deleteTournament = useCallback((tournamentId) => {
@@ -899,14 +924,7 @@ const App = () => {
           onClose={() => setIsCreateModalOpen(false)}
           title="Skapa ny tävling"
         >
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              createTournament();
-            }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{
                 display: 'block',
@@ -1016,7 +1034,13 @@ const App = () => {
               paddingTop: '16px'
             }}>
               <Button 
-                type="submit"
+                onClick={(e) => {
+                  console.log('Button onClick triggered');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Button preventDefault and stopPropagation called');
+                  createTournament();
+                }}
                 style={{ flex: 1 }}
                 disabled={!newTournamentName.trim()}
               >
@@ -1034,7 +1058,7 @@ const App = () => {
                 Avbryt
               </Button>
             </div>
-          </form>
+          </div>
         </Modal>
 
         {/* Instructions Modal */}
