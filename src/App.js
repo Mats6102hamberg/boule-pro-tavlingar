@@ -1218,7 +1218,7 @@ const App = () => {
     );
   }
 
-  // Tournament View - Nu med faktisk funktionalitet
+  // Tournament View - Nu med faktisk funktionalitet v2
   const tournament = tournaments.find(t => t.id === selectedTournamentId);
   
   if (!tournament) {
