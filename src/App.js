@@ -106,6 +106,91 @@ const TournamentNameInput = React.memo(({ value, onChange, placeholder }) => {
   );
 });
 
+// Modal Component - Stabil och enkel - FLYTTAD UTANFÖR App
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        zIndex: 50,
+        backdropFilter: 'blur(8px)'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        borderRadius: '24px',
+        maxWidth: '500px',
+        width: '100%',
+        padding: '32px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        animation: 'slideIn 0.3s ease-out'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{ 
+            fontSize: '24px', 
+            fontWeight: '700', 
+            background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            margin: 0
+          }}>
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'linear-gradient(45deg, #f1f5f9, #e2e8f0)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              fontSize: '20px',
+              cursor: 'pointer',
+              color: '#64748b',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'linear-gradient(45deg, #e2e8f0, #cbd5e1)';
+              e.target.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'linear-gradient(45deg, #f1f5f9, #e2e8f0)';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [tournaments, setTournaments] = useState([]);
   const [currentView, setCurrentView] = useState('dashboard');
@@ -348,91 +433,6 @@ const App = () => {
   const handleTournamentNameChange = useCallback((newValue) => {
     setNewTournamentName(newValue);
   }, []);
-
-  // Modal Component - Stabil och enkel
-  const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    
-    return (
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(8px)'
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
-        <div style={{
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          borderRadius: '24px',
-          maxWidth: '500px',
-          width: '100%',
-          padding: '32px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '700', 
-              background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              margin: 0
-            }}>
-              {title}
-            </h2>
-            <button
-              onClick={onClose}
-              style={{
-                background: 'linear-gradient(45deg, #f1f5f9, #e2e8f0)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#64748b',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'linear-gradient(45deg, #e2e8f0, #cbd5e1)';
-                e.target.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'linear-gradient(45deg, #f1f5f9, #e2e8f0)';
-                e.target.style.transform = 'scale(1)';
-              }}
-            >
-              ✕
-            </button>
-          </div>
-          {children}
-        </div>
-      </div>
-    );
-  };
 
   // Dashboard View
   if (currentView === 'dashboard') {
