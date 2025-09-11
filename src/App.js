@@ -350,7 +350,7 @@ const App = () => {
   }, []);
 
   // Modal Component - Stabil och enkel
-  const Modal = useCallback(({ isOpen, onClose, title, children }) => {
+  const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     
     return (
@@ -432,7 +432,7 @@ const App = () => {
         </div>
       </div>
     );
-  }, []);
+  };
 
   // Dashboard View
   if (currentView === 'dashboard') {
