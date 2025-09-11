@@ -313,46 +313,28 @@ const App = () => {
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             marginBottom: '24px'
           }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '32px'
-            }}>
-              <div>
-                <h2 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: 'bold', 
-                  color: '#1e293b',
-                  marginBottom: '8px'
-                }}>
-                  <button
-                    onClick={() => alert('Här skulle en söksida för tidigare tävlingar öppnas där man kan:\n\n🔍 Söka efter specifika turneringar\n📅 Filtrera på datum\n🏆 Filtrera på kategori (V55, V65, etc.)\n📍 Söka på plats\n👥 Hitta lag eller spelare\n📊 Se historisk statistik\n\nI en riktig implementation skulle detta navigera till en dedikerad söksida!')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#0d9488',
-                      fontSize: '32px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      padding: 0
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.color = '#0f766e';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.color = '#0d9488';
-                    }}
-                  >
-                    🔍 Tidigare tävlingar
-                  </button>
-                </h2>
-                <p style={{ color: '#64748b', margin: 0 }}>
-                  Hantera professionella boule-turneringar
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h2 style={{ 
+                fontSize: '48px', 
+                fontWeight: 'bold', 
+                color: '#0d9488',
+                marginBottom: '16px',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+              onClick={() => alert('Här skulle en söksida för tidigare tävlingar öppnas där man kan:\n\n🔍 Söka efter specifika turneringar\n📅 Filtrera på datum\n🏆 Filtrera på kategori (V55, V65, etc.)\n📍 Söka på plats\n👥 Hitta lag eller spelare\n📊 Se historisk statistik\n\nI en riktig implementation skulle detta navigera till en dedikerad söksida!')}
+              >
+                🔍 Tidigare tävlingar
+              </h2>
+              <p style={{ 
+                color: '#64748b', 
+                margin: '0 0 24px 0',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>
+                Hantera professionella boule-turneringar
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <Button onClick={() => setIsCreateModalOpen(true)}>
                   + Ny tävling
                 </Button>
