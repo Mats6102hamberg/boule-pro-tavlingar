@@ -225,15 +225,21 @@ const App = () => {
     }
   }, []);
 
-  // Spara data till localStorage
+  // Spara data till localStorage - TILLFÄLLIGT INAKTIVERAD
+  /*
   useEffect(() => {
     if (tournaments.length >= 0) {
       localStorage.setItem('boule-pro-tournaments', JSON.stringify({ tournaments }));
     }
   }, [tournaments]);
+  */
 
   const createTournament = useCallback(() => {
+    alert('createTournament called! newTournamentName: ' + newTournamentName);
+    
     if (newTournamentName.trim()) {
+      alert('Creating tournament: ' + newTournamentName.trim());
+      
       const newTournament = {
         id: Date.now().toString(),
         name: newTournamentName.trim(),
@@ -244,9 +250,17 @@ const App = () => {
         currentPhase: 'setup',
         currentRound: 0
       };
+      
+      alert('About to update tournaments state...');
       setTournaments(prev => [...prev, newTournament]);
+      
+      alert('About to clear name and close modal...');
       setNewTournamentName('');
       setIsCreateModalOpen(false);
+      
+      alert('Tournament creation completed!');
+    } else {
+      alert('Tournament name is empty!');
     }
   }, [newTournamentName, tournamentSettings]);
 
@@ -1010,9 +1024,12 @@ const App = () => {
             }}>
               <Button 
                 onClick={(e) => {
+                  alert('Button clicked! Preventing default...');
                   e.preventDefault();
                   e.stopPropagation();
+                  alert('About to call createTournament...');
                   createTournament();
+                  alert('createTournament call completed!');
                 }}
                 style={{ flex: 1 }}
                 disabled={!newTournamentName.trim()}
