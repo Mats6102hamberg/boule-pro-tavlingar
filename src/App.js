@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from 'react';
 
-// Add CSS animations
+// Add CSS animations with better browser support
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    0%, 100% { 
+      transform: translateY(0px); 
+      -webkit-transform: translateY(0px);
+    }
+    50% { 
+      transform: translateY(-20px); 
+      -webkit-transform: translateY(-20px);
+    }
   }
   @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%, 100% { 
+      transform: translateY(0); 
+      -webkit-transform: translateY(0);
+    }
+    50% { 
+      transform: translateY(-10px); 
+      -webkit-transform: translateY(-10px);
+    }
   }
   @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%, 100% { 
+      transform: scale(1); 
+      -webkit-transform: scale(1);
+    }
+    50% { 
+      transform: scale(1.1); 
+      -webkit-transform: scale(1.1);
+    }
   }
   @keyframes gradient {
     0% { background-position: 0% 50%; }
@@ -24,19 +42,28 @@ styleSheet.textContent = `
     0% { 
       opacity: 0; 
       transform: translateY(-50px) scale(0.9); 
+      -webkit-transform: translateY(-50px) scale(0.9);
     }
     100% { 
       opacity: 1; 
       transform: translateY(0) scale(1); 
+      -webkit-transform: translateY(0) scale(1);
     }
   }
   .gradient-bg {
     background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
+    -webkit-animation: gradient 15s ease infinite;
+  }
+  * {
+    box-sizing: border-box;
   }
 `;
-document.head.appendChild(styleSheet);
+if (!document.getElementById('boule-styles')) {
+  styleSheet.id = 'boule-styles';
+  document.head.appendChild(styleSheet);
+}
 
 const App = () => {
   const [tournaments, setTournaments] = useState([]);
@@ -392,18 +419,23 @@ const App = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #10b981 100%)',
         padding: '0',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        position: 'relative'
       }}>
         {/* Hero Section */}
         <div style={{
-          background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%)',
           color: 'white',
           padding: '80px 32px',
           textAlign: 'center',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
           {/* Animated Background Circles */}
           <div style={{
