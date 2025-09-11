@@ -1218,41 +1218,369 @@ const App = () => {
     );
   }
 
-  // Tournament View (kommer i nästa steg)
+  // Tournament View - Nu med faktisk funktionalitet
+  const tournament = tournaments.find(t => t.id === selectedTournamentId);
+  
+  if (!tournament) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f1f5f9',
+        padding: '32px',
+        textAlign: 'center'
+      }}>
+        <h1>Turnering hittades inte</h1>
+        <Button onClick={goToDashboard}>Tillbaka till dashboard</Button>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#f1f5f9',
-      padding: '32px',
-      textAlign: 'center'
+      background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #10b981 100%)',
+      padding: '0',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
-      <header style={{
-        backgroundColor: '#0d9488',
-        color: 'white',
-        padding: '16px',
-        borderRadius: '8px',
-        marginBottom: '32px'
+      {/* Header */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
+        padding: '20px 32px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
       }}>
-        <button
-          onClick={goToDashboard}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}
-        >
-          Boule Pro Tävlingar
-        </button>
-      </header>
-      
-      <h1>Turneringssida kommer snart...</h1>
-      <p>Vi bygger turneringsfunktionerna steg för steg</p>
-      <Button onClick={goToDashboard} style={{ marginTop: '20px' }}>
-        Tillbaka till dashboard
-      </Button>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button
+              onClick={goToDashboard}
+              style={{
+                background: 'linear-gradient(45deg, #3b82f6, #1e40af)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              ← Tillbaka
+            </button>
+            <div>
+              <h1 style={{
+                margin: 0,
+                fontSize: '28px',
+                fontWeight: '700',
+                background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                {tournament.name}
+              </h1>
+              <p style={{
+                margin: '4px 0 0 0',
+                color: '#64748b',
+                fontSize: '16px'
+              }}>
+                📅 {tournament.date} • {tournament.settings.teamType} • {tournament.settings.ageCategory}
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button
+              onClick={() => setIsPrintModalOpen(true)}
+              variant="secondary"
+            >
+              🖨️ Skriv ut
+            </Button>
+            <Button
+              onClick={() => deleteTournament(tournament.id)}
+              variant="danger"
+            >
+              🗑️ Radera
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '40px 32px'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '24px',
+          padding: '40px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.3)'
+        }}>
+          
+          {/* Tournament Status */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '20px',
+            marginBottom: '40px'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              borderRadius: '16px',
+              padding: '20px',
+              textAlign: 'center',
+              border: '2px solid #0ea5e9'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>👥</div>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '700', color: '#0c4a6e' }}>
+                {tournament.teams.length}
+              </h3>
+              <p style={{ margin: 0, color: '#0369a1', fontWeight: '500' }}>Lag anmälda</p>
+            </div>
+            
+            <div style={{
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+              borderRadius: '16px',
+              padding: '20px',
+              textAlign: 'center',
+              border: '2px solid #22c55e'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎯</div>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '700', color: '#14532d' }}>
+                {tournament.matches.filter(m => m.isCompleted).length}/{tournament.matches.length}
+              </h3>
+              <p style={{ margin: 0, color: '#166534', fontWeight: '500' }}>Matcher spelade</p>
+            </div>
+            
+            <div style={{
+              background: tournament.currentPhase === 'setup' ? 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)' :
+                         tournament.currentPhase === 'swiss' ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' :
+                         tournament.currentPhase === 'cup' ? 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)' : 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+              borderRadius: '16px',
+              padding: '20px',
+              textAlign: 'center',
+              border: tournament.currentPhase === 'setup' ? '2px solid #6b7280' :
+                      tournament.currentPhase === 'swiss' ? '2px solid #f59e0b' :
+                      tournament.currentPhase === 'cup' ? '2px solid #ea580c' : '2px solid #22c55e'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+                {tournament.currentPhase === 'setup' ? '⚙️' :
+                 tournament.currentPhase === 'swiss' ? '⚡' :
+                 tournament.currentPhase === 'cup' ? '🏆' : '✅'}
+              </div>
+              <h3 style={{ 
+                margin: '0 0 4px 0', 
+                fontSize: '18px', 
+                fontWeight: '700',
+                color: tournament.currentPhase === 'setup' ? '#374151' :
+                       tournament.currentPhase === 'swiss' ? '#92400e' :
+                       tournament.currentPhase === 'cup' ? '#9a3412' : '#14532d'
+              }}>
+                {tournament.currentPhase === 'setup' ? 'Förberedelse' :
+                 tournament.currentPhase === 'swiss' ? `Swiss Rond ${tournament.currentRound}` :
+                 tournament.currentPhase === 'cup' ? 'Cup-spel' : 'Avslutad'}
+              </h3>
+              <p style={{ 
+                margin: 0, 
+                fontWeight: '500',
+                color: tournament.currentPhase === 'setup' ? '#4b5563' :
+                       tournament.currentPhase === 'swiss' ? '#a16207' :
+                       tournament.currentPhase === 'cup' ? '#c2410c' : '#166534'
+              }}>
+                Aktuell fas
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '20px',
+            marginBottom: '40px'
+          }}>
+            <button
+              onClick={() => alert('Här skulle du kunna lägga till lag:\n\n• Lagnamn\n• Spelarnamn\n• Licensnummer\n• Kontaktinfo\n\nI en fullständig version skulle detta öppna en modal för lagregistrering.')}
+              style={{
+                background: 'linear-gradient(45deg, #10b981, #059669)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Lägg till lag</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Registrera deltagande lag</div>
+            </button>
+
+            <button
+              onClick={() => alert('Här skulle Swiss-ronder startas:\n\n• Automatisk parning baserat på poäng\n• Monrad-system för rättvisa matcher\n• Undvik att samma lag möts igen\n• Generera spelschema för aktuell rond\n\nI en fullständig version skulle detta starta Swiss-systemet.')}
+              style={{
+                background: tournament.teams.length < 4 ? 'linear-gradient(45deg, #94a3b8, #64748b)' : 'linear-gradient(45deg, #f59e0b, #d97706)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: tournament.teams.length < 4 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: tournament.teams.length < 4 ? 'none' : '0 4px 15px rgba(245, 158, 11, 0.4)',
+                opacity: tournament.teams.length < 4 ? 0.6 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (tournament.teams.length >= 4) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(245, 158, 11, 0.5)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (tournament.teams.length >= 4) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(245, 158, 11, 0.4)';
+                }
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚡</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>
+                {tournament.currentPhase === 'setup' ? 'Starta Swiss' : 'Nästa rond'}
+              </div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>
+                {tournament.teams.length < 4 ? 'Behöver minst 4 lag' : 'Automatisk parning'}
+              </div>
+            </button>
+
+            <button
+              onClick={() => alert('Här skulle matchresultat registreras:\n\n• Visa aktuella matcher\n• Registrera poäng och resultat\n• Uppdatera ranking automatiskt\n• Visa nästa ronds parningar\n\nI en fullständig version skulle detta öppna matchhantering.')}
+              style={{
+                background: 'linear-gradient(45deg, #3b82f6, #1e40af)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎯</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Hantera matcher</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Registrera resultat</div>
+            </button>
+          </div>
+
+          {/* Tournament Info */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{
+              margin: '0 0 16px 0',
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#1e293b'
+            }}>
+              📋 Turneringsinställningar
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '16px'
+            }}>
+              <div>
+                <strong>Lagtyp:</strong> {tournament.settings.teamType}
+              </div>
+              <div>
+                <strong>Ålderskategori:</strong> {tournament.settings.ageCategory}
+              </div>
+              <div>
+                <strong>Swiss-ronder:</strong> {tournament.settings.swissRounds}
+              </div>
+              <div>
+                <strong>Lag per pool:</strong> {tournament.settings.teamsPerPool}
+              </div>
+            </div>
+          </div>
+
+          {tournament.teams.length === 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '40px',
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              borderRadius: '20px',
+              border: '2px dashed #38bdf8',
+              marginTop: '30px'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+              <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#0c4a6e', marginBottom: '8px' }}>
+                Inga lag anmälda ännu
+              </h3>
+              <p style={{ color: '#0369a1', marginBottom: '20px' }}>
+                Börja med att lägga till lag för att kunna starta turneringen.
+              </p>
+              <button
+                onClick={() => alert('Här skulle du kunna lägga till ditt första lag!')}
+                style={{
+                  background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                ➕ Lägg till första laget
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
