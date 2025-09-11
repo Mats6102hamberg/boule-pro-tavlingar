@@ -65,6 +65,47 @@ if (!document.getElementById('boule-styles')) {
   document.head.appendChild(styleSheet);
 }
 
+// Isolerad Tournament Name Input för att förhindra re-render problem - FLYTTAD UTANFÖR App
+const TournamentNameInput = React.memo(({ value, onChange, placeholder }) => {
+  const handleChange = (e) => {
+    onChange(e.target.value);
+  };
+
+  const handleFocus = (e) => {
+    e.target.style.borderColor = '#3b82f6';
+    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+    e.target.style.background = 'white';
+  };
+
+  const handleBlur = (e) => {
+    e.target.style.borderColor = '#e2e8f0';
+    e.target.style.boxShadow = 'none';
+    e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+  };
+
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={handleChange}
+      placeholder={placeholder}
+      autoFocus
+      style={{
+        width: '100%',
+        padding: '12px 16px',
+        border: '2px solid #e2e8f0',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none',
+        transition: 'all 0.3s ease',
+        background: 'rgba(255, 255, 255, 0.9)'
+      }}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+    />
+  );
+});
+
 const App = () => {
   const [tournaments, setTournaments] = useState([]);
   const [currentView, setCurrentView] = useState('dashboard');
@@ -302,47 +343,6 @@ const App = () => {
       </select>
     );
   };
-
-  // Isolerad Tournament Name Input för att förhindra re-render problem
-  const TournamentNameInput = React.memo(({ value, onChange, placeholder }) => {
-    const handleChange = (e) => {
-      onChange(e.target.value);
-    };
-
-    const handleFocus = (e) => {
-      e.target.style.borderColor = '#3b82f6';
-      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-      e.target.style.background = 'white';
-    };
-
-    const handleBlur = (e) => {
-      e.target.style.borderColor = '#e2e8f0';
-      e.target.style.boxShadow = 'none';
-      e.target.style.background = 'rgba(255, 255, 255, 0.9)';
-    };
-
-    return (
-      <input
-        type="text"
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder}
-        autoFocus
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          border: '2px solid #e2e8f0',
-          borderRadius: '12px',
-          fontSize: '16px',
-          outline: 'none',
-          transition: 'all 0.3s ease',
-          background: 'rgba(255, 255, 255, 0.9)'
-        }}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-      />
-    );
-  });
 
   // Stabil onChange handler för tournament name
   const handleTournamentNameChange = useCallback((newValue) => {
