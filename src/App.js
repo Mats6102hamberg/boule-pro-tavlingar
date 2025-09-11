@@ -1,5 +1,43 @@
 import React, { useState, useEffect } from 'react';
 
+// Add CSS animations
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes slideIn {
+    0% { 
+      opacity: 0; 
+      transform: translateY(-50px) scale(0.9); 
+    }
+    100% { 
+      opacity: 1; 
+      transform: translateY(0) scale(1); 
+    }
+  }
+  .gradient-bg {
+    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+`;
+document.head.appendChild(styleSheet);
+
 const App = () => {
   const [tournaments, setTournaments] = useState([]);
   const [currentView, setCurrentView] = useState('dashboard');
@@ -145,10 +183,26 @@ const App = () => {
   // Button Component
   const Button = ({ children, onClick, variant = 'primary', disabled, style = {} }) => {
     const variants = {
-      primary: { backgroundColor: '#0d9488', color: 'white' },
-      secondary: { backgroundColor: '#e2e8f0', color: '#1e293b' },
-      danger: { backgroundColor: '#dc2626', color: 'white' },
-      success: { backgroundColor: '#16a34a', color: 'white' }
+      primary: { 
+        background: 'linear-gradient(45deg, #3b82f6, #1e40af)',
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+      },
+      secondary: { 
+        background: 'linear-gradient(45deg, #e2e8f0, #cbd5e1)',
+        color: '#1e293b',
+        boxShadow: '0 4px 15px rgba(148, 163, 184, 0.3)'
+      },
+      danger: { 
+        background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+      },
+      success: { 
+        background: 'linear-gradient(45deg, #10b981, #059669)',
+        color: 'white',
+        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+      }
     };
     
     return (
@@ -156,15 +210,29 @@ const App = () => {
         onClick={onClick}
         disabled={disabled}
         style={{
-          padding: '12px 16px',
-          borderRadius: '8px',
+          padding: '12px 24px',
+          borderRadius: '12px',
           border: 'none',
-          fontWeight: '500',
+          fontWeight: '600',
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.5 : 1,
           fontSize: '14px',
+          transition: 'all 0.3s ease',
+          transform: 'translateY(0)',
           ...variants[variant],
           ...style
+        }}
+        onMouseEnter={(e) => {
+          if (!disabled) {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.filter = 'brightness(1.1)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!disabled) {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.filter = 'brightness(1)';
+          }
         }}
       >
         {children}
@@ -182,12 +250,24 @@ const App = () => {
         placeholder={placeholder}
         style={{
           width: '100%',
-          padding: '8px 12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '6px',
-          fontSize: '14px',
+          padding: '12px 16px',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          fontSize: '16px',
           outline: 'none',
+          transition: 'all 0.3s ease',
+          background: 'rgba(255, 255, 255, 0.9)',
           ...style
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = '#3b82f6';
+          e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+          e.target.style.background = 'white';
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = '#e2e8f0';
+          e.target.style.boxShadow = 'none';
+          e.target.style.background = 'rgba(255, 255, 255, 0.9)';
         }}
       />
     );
@@ -201,13 +281,23 @@ const App = () => {
         onChange={(e) => onChange(e.target.value)}
         style={{
           width: '100%',
-          padding: '8px 12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '6px',
-          fontSize: '14px',
+          padding: '12px 16px',
+          border: '2px solid #e2e8f0',
+          borderRadius: '12px',
+          fontSize: '16px',
           outline: 'none',
           backgroundColor: 'white',
+          transition: 'all 0.3s ease',
+          cursor: 'pointer',
           ...style
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = '#3b82f6';
+          e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = '#e2e8f0';
+          e.target.style.boxShadow = 'none';
         }}
       >
         {options.map(option => (
@@ -230,32 +320,38 @@ const App = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        background: 'rgba(0, 0, 0, 0.6)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        zIndex: 50
+        zIndex: 50,
+        backdropFilter: 'blur(8px)'
       }}>
         <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          borderRadius: '24px',
           maxWidth: '500px',
           width: '100%',
-          padding: '24px',
+          padding: '32px',
           maxHeight: '90vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          animation: 'slideIn 0.3s ease-out'
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '16px'
+            marginBottom: '24px'
           }}>
             <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: 'bold', 
-              color: '#1e293b',
+              fontSize: '24px', 
+              fontWeight: '700', 
+              background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
               margin: 0
             }}>
               {title}
@@ -263,11 +359,23 @@ const App = () => {
             <button
               onClick={onClose}
               style={{
-                background: 'none',
+                background: 'linear-gradient(45deg, #f1f5f9, #e2e8f0)',
                 border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
                 fontSize: '20px',
                 cursor: 'pointer',
-                color: '#64748b'
+                color: '#64748b',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(45deg, #e2e8f0, #cbd5e1)';
+                e.target.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(45deg, #f1f5f9, #e2e8f0)';
+                e.target.style.transform = 'scale(1)';
               }}
             >
               ✕
@@ -284,117 +392,323 @@ const App = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: '#f1f5f9',
-        padding: '32px'
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '0',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
+        {/* Hero Section */}
         <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto'
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%)',
+          color: 'white',
+          padding: '80px 32px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <header style={{
-            backgroundColor: '#0d9488',
-            color: 'white',
-            padding: '16px',
-            borderRadius: '8px',
-            marginBottom: '32px'
-          }}>
-            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+          {/* Animated Background Circles */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            left: '-50px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            animation: 'float 6s ease-in-out infinite'
+          }}></div>
+          <div style={{
+            position: 'absolute',
+            bottom: '-100px',
+            right: '-100px',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.05)',
+            animation: 'float 8s ease-in-out infinite reverse'
+          }}></div>
+          
+          <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
+            <div style={{
+              fontSize: '72px',
+              marginBottom: '20px',
+              animation: 'bounce 2s ease-in-out infinite'
+            }}>
+              🏆
+            </div>
+            <h1 style={{
+              fontSize: '56px',
+              fontWeight: '800',
+              margin: '0 0 16px 0',
+              background: 'linear-gradient(45deg, #ffffff, #e0e7ff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 4px 8px rgba(0, 0, 0, 0.3)'
+            }}>
               Boule Pro Tävlingar
             </h1>
-            <p style={{ margin: '4px 0 0 0', fontSize: '14px', opacity: 0.8 }}>
-              Swiss System + Cup-spel
+            <p style={{
+              fontSize: '24px',
+              margin: '0 0 40px 0',
+              opacity: 0.9,
+              fontWeight: '300'
+            }}>
+              Swiss System • Monrad • Pool-spel med professionell utskrift
             </p>
-          </header>
-          
+            
+            <div style={{
+              display: 'flex',
+              gap: '20px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginBottom: '60px'
+            }}>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                style={{
+                  background: 'linear-gradient(45deg, #10b981, #059669)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '18px 36px',
+                  borderRadius: '50px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
+                  transition: 'all 0.3s ease',
+                  transform: 'translateY(0)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.4)';
+                }}
+              >
+                🚀 Skapa Ny Tävling
+              </button>
+              
+              <button
+                onClick={() => setIsInstructionsModalOpen(true)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  padding: '16px 32px',
+                  borderRadius: '50px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+              >
+                📖 Instruktioner
+              </button>
+            </div>
+
+            {/* Feature Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '24px',
+              maxWidth: '900px',
+              margin: '0 auto'
+            }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                padding: '24px',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡</div>
+                <h3 style={{ fontSize: '18px', margin: '0 0 8px 0', fontWeight: '600' }}>Swiss System</h3>
+                <p style={{ fontSize: '14px', opacity: 0.8, margin: 0 }}>Automatisk parning för rättvisa matcher</p>
+              </div>
+              
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                padding: '24px',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎯</div>
+                <h3 style={{ fontSize: '18px', margin: '0 0 8px 0', fontWeight: '600' }}>Professionell</h3>
+                <p style={{ fontSize: '14px', opacity: 0.8, margin: 0 }}>Utskrifter för anslagstavla</p>
+              </div>
+              
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                padding: '24px',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>💾</div>
+                <h3 style={{ fontSize: '18px', margin: '0 0 8px 0', fontWeight: '600' }}>Automatisk</h3>
+                <p style={{ fontSize: '14px', opacity: 0.8, margin: 0 }}>Sparar data automatiskt</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '60px 32px'
+        }}>
           <div style={{
-            backgroundColor: 'white',
-            padding: '24px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            marginBottom: '24px'
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '24px',
+            padding: '40px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)'
           }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
               <h2 style={{ 
-                fontSize: '48px', 
-                fontWeight: 'bold', 
-                color: '#0d9488',
+                fontSize: '42px', 
+                fontWeight: '700', 
+                background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
                 marginBottom: '16px',
-                textDecoration: 'underline',
                 cursor: 'pointer'
               }}
               onClick={() => alert('Här skulle en söksida för tidigare tävlingar öppnas där man kan:\n\n🔍 Söka efter specifika turneringar\n📅 Filtrera på datum\n🏆 Filtrera på kategori (V55, V65, etc.)\n📍 Söka på plats\n👥 Hitta lag eller spelare\n📊 Se historisk statistik\n\nI en riktig implementation skulle detta navigera till en dedikerad söksida!')}
               >
-                🔍 Tidigare tävlingar
+                🔍 Tidigare Tävlingar
               </h2>
               <p style={{ 
                 color: '#64748b', 
-                margin: '0 0 24px 0',
-                fontSize: '18px',
-                fontWeight: '500'
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: '400'
               }}>
-                Hantera professionella boule-turneringar
+                Hantera professionella boule-turneringar med avancerade funktioner
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <Button onClick={() => setIsCreateModalOpen(true)}>
-                  + Ny tävling
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  onClick={() => setIsInstructionsModalOpen(true)}
-                  style={{
-                    fontSize: '14px',
-                    padding: '10px 16px'
-                  }}
-                >
-                  📖 Instruktioner
-                </Button>
-              </div>
             </div>
             
             {tournaments.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '64px 0' }}>
-                <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '80px 40px',
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                borderRadius: '20px',
+                border: '2px dashed #38bdf8',
+                margin: '40px 0'
+              }}>
+                <div style={{ 
+                  fontSize: '80px', 
+                  marginBottom: '24px',
+                  animation: 'pulse 2s ease-in-out infinite'
+                }}>
+                  🏆
+                </div>
                 <h3 style={{ 
-                  fontSize: '20px', 
-                  fontWeight: '600', 
-                  color: '#1e293b',
-                  marginBottom: '8px'
+                  fontSize: '28px', 
+                  fontWeight: '700', 
+                  color: '#0c4a6e',
+                  marginBottom: '16px'
                 }}>
                   Välkommen till Boule Pro!
                 </h3>
-                <p style={{ color: '#64748b', marginBottom: '24px' }}>
-                  Skapa din första professionella turnering för att komma igång.
+                <p style={{ 
+                  color: '#0369a1', 
+                  marginBottom: '32px',
+                  fontSize: '18px',
+                  maxWidth: '400px',
+                  margin: '0 auto 32px auto',
+                  lineHeight: '1.6'
+                }}>
+                  Skapa din första professionella turnering med avancerade utskriftsmöjligheter och automatisk Swiss System-parning.
                 </p>
-                <Button onClick={() => setIsCreateModalOpen(true)}>
-                  Skapa din första tävling
-                </Button>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  style={{
+                    background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '16px 32px',
+                    borderRadius: '50px',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)',
+                    transition: 'all 0.3s ease',
+                    transform: 'translateY(0)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 12px 32px rgba(14, 165, 233, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 8px 24px rgba(14, 165, 233, 0.4)';
+                  }}
+                >
+                  ✨ Skapa Din Första Tävling
+                </button>
               </div>
             ) : (
               <div style={{
                 display: 'grid',
-                gap: '24px',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))'
+                gap: '32px',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                margin: '40px 0'
               }}>
                 {tournaments.map(tournament => (
                   <div
                     key={tournament.id}
                     onClick={() => openTournament(tournament.id)}
                     style={{
-                      backgroundColor: 'white',
+                      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
                       border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '16px',
+                      borderRadius: '20px',
+                      padding: '24px',
                       cursor: 'pointer',
-                      transition: 'box-shadow 0.2s',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                      transform: 'translateY(0)',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      e.target.style.transform = 'translateY(-8px)';
+                      e.target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
+                      e.target.style.borderColor = '#3b82f6';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                      e.target.style.borderColor = '#e2e8f0';
                     }}
                   >
+                    {/* Gradient Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: 'linear-gradient(90deg, #3b82f6, #10b981, #f59e0b)'
+                    }}></div>
+                    
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -402,85 +716,122 @@ const App = () => {
                     }}>
                       <div style={{ flex: 1 }}>
                         <h3 style={{
-                          fontSize: '18px',
-                          fontWeight: '600',
+                          fontSize: '22px',
+                          fontWeight: '700',
                           color: '#1e293b',
-                          marginBottom: '4px'
+                          marginBottom: '8px',
+                          background: 'linear-gradient(45deg, #1e293b, #3b82f6)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent'
                         }}>
                           {tournament.name}
                         </h3>
                         <p style={{
-                          fontSize: '14px',
+                          fontSize: '16px',
                           color: '#64748b',
-                          marginBottom: '8px'
+                          marginBottom: '16px',
+                          fontWeight: '500'
                         }}>
-                          {tournament.date}
+                          📅 {tournament.date}
                         </p>
                         
                         <div style={{
                           display: 'flex',
                           gap: '8px',
-                          marginBottom: '12px',
+                          marginBottom: '16px',
                           flexWrap: 'wrap'
                         }}>
                           <span style={{
-                            backgroundColor: '#d1fae5',
+                            background: 'linear-gradient(45deg, #d1fae5, #a7f3d0)',
                             color: '#065f46',
                             fontSize: '12px',
-                            padding: '4px 8px',
-                            borderRadius: '4px'
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontWeight: '600',
+                            border: '1px solid #bbf7d0'
                           }}>
                             {tournament.settings.teamType.toUpperCase()}
                           </span>
                           <span style={{
-                            backgroundColor: '#dbeafe',
+                            background: 'linear-gradient(45deg, #dbeafe, #bfdbfe)',
                             color: '#1e40af',
                             fontSize: '12px',
-                            padding: '4px 8px',
-                            borderRadius: '4px'
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontWeight: '600',
+                            border: '1px solid #93c5fd'
                           }}>
                             {tournament.settings.ageCategory}
                           </span>
                           <span style={{
-                            backgroundColor: tournament.currentPhase === 'setup' ? '#f3f4f6' :
-                                           tournament.currentPhase === 'swiss' ? '#fef3c7' :
-                                           tournament.currentPhase === 'cup' ? '#fed7aa' : '#dcfce7',
+                            background: tournament.currentPhase === 'setup' ? 'linear-gradient(45deg, #f3f4f6, #e5e7eb)' :
+                                       tournament.currentPhase === 'swiss' ? 'linear-gradient(45deg, #fef3c7, #fde68a)' :
+                                       tournament.currentPhase === 'cup' ? 'linear-gradient(45deg, #fed7aa, #fdba74)' : 'linear-gradient(45deg, #dcfce7, #bbf7d0)',
                             color: tournament.currentPhase === 'setup' ? '#374151' :
                                    tournament.currentPhase === 'swiss' ? '#92400e' :
                                    tournament.currentPhase === 'cup' ? '#9a3412' : '#166534',
                             fontSize: '12px',
-                            padding: '4px 8px',
-                            borderRadius: '4px'
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontWeight: '600'
                           }}>
-                            {tournament.currentPhase === 'setup' ? 'Förberedelse' :
-                             tournament.currentPhase === 'swiss' ? `Swiss Rond ${tournament.currentRound}` :
-                             tournament.currentPhase === 'cup' ? 'Cup-spel' : 'Avslutad'}
+                            {tournament.currentPhase === 'setup' ? '⚙️ Förberedelse' :
+                             tournament.currentPhase === 'swiss' ? `⚡ Swiss Rond ${tournament.currentRound}` :
+                             tournament.currentPhase === 'cup' ? '🏆 Cup-spel' : '✅ Avslutad'}
                           </span>
                         </div>
                         
                         <div style={{
                           display: 'flex',
-                          gap: '16px',
-                          fontSize: '14px',
-                          color: '#64748b'
+                          gap: '20px',
+                          fontSize: '16px',
+                          color: '#475569',
+                          fontWeight: '500'
                         }}>
-                          <span>👥 {tournament.teams.length} lag</span>
-                          <span>🏆 {tournament.matches.filter(m => m.isCompleted).length}/{tournament.matches.length} matcher</span>
+                          <span style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            👥 {tournament.teams.length} lag
+                          </span>
+                          <span style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            � {tournament.matches.filter(m => m.isCompleted).length}/{tournament.matches.length}
+                          </span>
                         </div>
                       </div>
-                      <Button
-                        variant="danger"
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteTournament(tournament.id);
                         }}
                         style={{
-                          fontSize: '12px',
-                          padding: '4px 8px'
+                          background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          fontSize: '16px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'scale(1.1)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1)';
+                          e.target.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
                         }}
                       >
                         🗑️
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ))}
