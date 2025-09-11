@@ -233,7 +233,6 @@ const App = () => {
   }, [tournaments]);
 
   const createTournament = useCallback(() => {
-    console.log('createTournament called with:', newTournamentName.trim());
     if (newTournamentName.trim()) {
       const newTournament = {
         id: Date.now().toString(),
@@ -245,13 +244,9 @@ const App = () => {
         currentPhase: 'setup',
         currentRound: 0
       };
-      console.log('Creating tournament:', newTournament);
       setTournaments(prev => [...prev, newTournament]);
       setNewTournamentName('');
       setIsCreateModalOpen(false);
-      console.log('Tournament created and modal closed');
-    } else {
-      console.log('Tournament name is empty, not creating');
     }
   }, [newTournamentName, tournamentSettings]);
 
@@ -1014,7 +1009,11 @@ const App = () => {
               paddingTop: '16px'
             }}>
               <Button 
-                onClick={createTournament} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  createTournament();
+                }} 
                 style={{ flex: 1 }}
                 disabled={!newTournamentName.trim()}
               >
@@ -1022,7 +1021,11 @@ const App = () => {
               </Button>
               <Button 
                 variant="secondary" 
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsCreateModalOpen(false);
+                }}
                 style={{ flex: 1 }}
               >
                 Avbryt
