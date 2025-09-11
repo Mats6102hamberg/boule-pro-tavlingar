@@ -225,21 +225,14 @@ const App = () => {
     }
   }, []);
 
-  // Spara data till localStorage - TILLFÄLLIGT INAKTIVERAD
-  /*
+  // Spara data till localStorage
   useEffect(() => {
     if (tournaments.length >= 0) {
       localStorage.setItem('boule-pro-tournaments', JSON.stringify({ tournaments }));
     }
   }, [tournaments]);
-  */
 
   const createTournament = useCallback(() => {
-    // SUPER MINIMAL VERSION - endast alert för att bekräfta att funktionen körs
-    alert('Tournament would be created with name: ' + newTournamentName);
-    
-    // KOMMENTERAT UT ALLT SOM KAN ORSAKA PROBLEM:
-    /*
     if (newTournamentName.trim()) {
       const newTournament = {
         id: Date.now().toString(),
@@ -255,7 +248,6 @@ const App = () => {
       setNewTournamentName('');
       setIsCreateModalOpen(false);
     }
-    */
   }, [newTournamentName, tournamentSettings]);
 
   const deleteTournament = useCallback((tournamentId) => {
@@ -1018,7 +1010,6 @@ const App = () => {
             }}>
               <Button 
                 onClick={(e) => {
-                  alert('Button clicked! Name: ' + newTournamentName);
                   e.preventDefault();
                   e.stopPropagation();
                   createTournament();
