@@ -199,6 +199,7 @@ const App = () => {
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
+  const [isLiveView, setIsLiveView] = useState(false);
   const [printOptions, setPrintOptions] = useState({
     type: 'ranking',
     includeLogo: true,
@@ -313,6 +314,331 @@ const App = () => {
     const newPlayers = Array(playerCount).fill('');
     setNewTeam(prev => ({ ...prev, players: newPlayers }));
   }, []);
+
+  // ⚡ SWISS SYSTEM - Matchparning med Buchholz
+  const calculateBuchholz = useCallback((team, matches) => {
+    // Buchholz = summan av alla motståndarnas poäng
+    const opponentIds = matches
+      .filter(m => m.isCompleted && (m.team1Id === team.id || m.team2Id === team.id))
+      .map(m => m.team1Id === team.id ? m.team2Id : m.team1Id);
+    
+    return opponentIds.reduce((sum, oppId) => {
+      const opponent = tournaments.find(t => t.teams.find(tm => tm.id === oppId));
+      if (opponent) {
+        const oppTeam = opponent.teams.find(tm => tm.id === oppId);
+        return sum + (oppTeam?.points || 0);
+      }
+      return sum;
+    }, 0);
+  }, [tournaments]);
+
+  const generateSwissRoundPairings = useCallback((tournament) => {
+    const teams = [...tournament.teams];
+    
+    // Sortera lag efter poäng (och Buchholz vid lika)
+    teams.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const buchholzA = calculateBuchholz(a, tournament.matches);
+      const buchholzB = calculateBuchholz(b, tournament.matches);
+      return buchholzB - buchholzA;
+    });
+
+    const pairings = [];
+    const paired = new Set();
+
+    // Hitta tidigare motståndare för varje lag
+    const previousOpponents = new Map();
+    tournament.matches.forEach(match => {
+      if (!previousOpponents.has(match.team1Id)) previousOpponents.set(match.team1Id, new Set());
+      if (!previousOpponents.has(match.team2Id)) previousOpponents.set(match.team2Id, new Set());
+      previousOpponents.get(match.team1Id).add(match.team2Id);
+      previousOpponents.get(match.team2Id).add(match.team1Id);
+    });
+
+    // Para ihop lag från toppen (undvik omatcher)
+    for (let i = 0; i < teams.length; i++) {
+      if (paired.has(teams[i].id)) continue;
+      
+      for (let j = i + 1; j < teams.length; j++) {
+        if (paired.has(teams[j].id)) continue;
+        
+        // Kolla om de mötts tidigare
+        const hasPlayedBefore = previousOpponents.get(teams[i].id)?.has(teams[j].id);
+        
+        if (!hasPlayedBefore) {
+          pairings.push({
+            id: Date.now().toString() + Math.random(),
+            team1Id: teams[i].id,
+            team2Id: teams[j].id,
+            team1Name: teams[i].name,
+            team2Name: teams[j].name,
+            team1Score: 0,
+            team2Score: 0,
+            round: tournament.currentRound + 1,
+            phase: 'swiss',
+            isCompleted: false,
+            court: null
+          });
+          paired.add(teams[i].id);
+          paired.add(teams[j].id);
+          break;
+        }
+      }
+    }
+
+    return pairings;
+  }, [calculateBuchholz]);
+
+  const startSwissRound = useCallback(() => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    if (tournament.teams.length < 4) {
+      alert('Du behöver minst 4 lag för att starta Swiss-ronder!');
+      return;
+    }
+
+    const newPairings = generateSwissRoundPairings(tournament);
+    
+    const updatedTournament = {
+      ...tournament,
+      currentPhase: 'swiss',
+      currentRound: tournament.currentRound + 1,
+      matches: [...tournament.matches, ...newPairings]
+    };
+
+    setTournaments(prev => prev.map(t => 
+      t.id === selectedTournamentId ? updatedTournament : t
+    ));
+  }, [selectedTournamentId, tournaments, generateSwissRoundPairings]);
+
+  // 🎯 MATCHHANTERING - Registrera resultat
+  const updateMatchResult = useCallback((matchId, team1Score, team2Score) => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    const match = tournament.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    // Uppdatera match med resultat
+    const updatedMatches = tournament.matches.map(m => {
+      if (m.id === matchId) {
+        return {
+          ...m,
+          team1Score: parseInt(team1Score) || 0,
+          team2Score: parseInt(team2Score) || 0,
+          isCompleted: true
+        };
+      }
+      return m;
+    });
+
+    // Beräkna nya poäng för lagen
+    const updatedTeams = tournament.teams.map(team => {
+      if (team.id === match.team1Id || team.id === match.team2Id) {
+        // Räkna alla matcher för detta lag
+        let wins = 0, losses = 0, draws = 0, points = 0;
+        
+        updatedMatches.forEach(m => {
+          if (!m.isCompleted) return;
+          
+          if (m.team1Id === team.id) {
+            if (m.team1Score > m.team2Score) { wins++; points += 2; }
+            else if (m.team1Score < m.team2Score) losses++;
+            else { draws++; points += 1; }
+          } else if (m.team2Id === team.id) {
+            if (m.team2Score > m.team1Score) { wins++; points += 2; }
+            else if (m.team2Score < m.team1Score) losses++;
+            else { draws++; points += 1; }
+          }
+        });
+
+        return {
+          ...team,
+          wins,
+          losses,
+          draws,
+          points,
+          buchholz: calculateBuchholz(team, updatedMatches)
+        };
+      }
+      return team;
+    });
+
+    const updatedTournament = {
+      ...tournament,
+      matches: updatedMatches,
+      teams: updatedTeams
+    };
+
+    setTournaments(prev => prev.map(t => 
+      t.id === selectedTournamentId ? updatedTournament : t
+    ));
+  }, [selectedTournamentId, tournaments, calculateBuchholz]);
+
+  // 🏆 CUP SYSTEM - Generera bracket
+  const startCupPhase = useCallback(() => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    // Sortera lag efter poäng och Buchholz
+    const sortedTeams = [...tournament.teams].sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      return b.buchholz - a.buchholz;
+    });
+
+    // Ta top 8 till cup
+    const cupTeams = sortedTeams.slice(0, Math.min(8, sortedTeams.length));
+    
+    if (cupTeams.length < 4) {
+      alert('Du behöver minst 4 lag för cup-spel! Kör fler Swiss-ronder.');
+      return;
+    }
+
+    // Skapa kvartsfinal-matcher (1 vs 8, 2 vs 7, 3 vs 6, 4 vs 5)
+    const quarterFinals = [];
+    const pairs = [
+      [0, 7], [1, 6], [2, 5], [3, 4]
+    ];
+
+    pairs.forEach(([i1, i2], index) => {
+      if (cupTeams[i1] && cupTeams[i2]) {
+        quarterFinals.push({
+          id: Date.now().toString() + Math.random(),
+          team1Id: cupTeams[i1].id,
+          team2Id: cupTeams[i2].id,
+          team1Name: cupTeams[i1].name,
+          team2Name: cupTeams[i2].name,
+          team1Score: 0,
+          team2Score: 0,
+          round: 'qf',
+          phase: 'cup',
+          matchNumber: index + 1,
+          isCompleted: false,
+          court: null
+        });
+      }
+    });
+
+    const updatedTournament = {
+      ...tournament,
+      currentPhase: 'cup',
+      matches: [...tournament.matches, ...quarterFinals]
+    };
+
+    setTournaments(prev => prev.map(t => 
+      t.id === selectedTournamentId ? updatedTournament : t
+    ));
+  }, [selectedTournamentId, tournaments]);
+
+  const advanceCupRound = useCallback(() => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    const currentCupMatches = tournament.matches.filter(m => m.phase === 'cup' && !m.isCompleted);
+    
+    if (currentCupMatches.length > 0) {
+      alert('Alla matcher i nuvarande rond måste vara klara först!');
+      return;
+    }
+
+    const completedCupMatches = tournament.matches.filter(m => m.phase === 'cup' && m.isCompleted);
+    const lastRound = completedCupMatches[completedCupMatches.length - 1]?.round || 'qf';
+
+    let nextMatches = [];
+
+    if (lastRound === 'qf') {
+      // Skapa semifinaler
+      const qfMatches = completedCupMatches.filter(m => m.round === 'qf');
+      
+      for (let i = 0; i < qfMatches.length; i += 2) {
+        const winner1 = qfMatches[i].team1Score > qfMatches[i].team2Score ? 
+          { id: qfMatches[i].team1Id, name: qfMatches[i].team1Name } : 
+          { id: qfMatches[i].team2Id, name: qfMatches[i].team2Name };
+        
+        const winner2 = qfMatches[i + 1].team1Score > qfMatches[i + 1].team2Score ? 
+          { id: qfMatches[i + 1].team1Id, name: qfMatches[i + 1].team1Name } : 
+          { id: qfMatches[i + 1].team2Id, name: qfMatches[i + 1].team2Name };
+
+        nextMatches.push({
+          id: Date.now().toString() + Math.random(),
+          team1Id: winner1.id,
+          team2Id: winner2.id,
+          team1Name: winner1.name,
+          team2Name: winner2.name,
+          team1Score: 0,
+          team2Score: 0,
+          round: 'sf',
+          phase: 'cup',
+          matchNumber: Math.floor(i / 2) + 1,
+          isCompleted: false,
+          court: null
+        });
+      }
+    } else if (lastRound === 'sf') {
+      // Skapa final och bronsmatch
+      const sfMatches = completedCupMatches.filter(m => m.round === 'sf');
+      
+      // Final
+      const finalist1 = sfMatches[0].team1Score > sfMatches[0].team2Score ? 
+        { id: sfMatches[0].team1Id, name: sfMatches[0].team1Name } : 
+        { id: sfMatches[0].team2Id, name: sfMatches[0].team2Name };
+      
+      const finalist2 = sfMatches[1].team1Score > sfMatches[1].team2Score ? 
+        { id: sfMatches[1].team1Id, name: sfMatches[1].team1Name } : 
+        { id: sfMatches[1].team2Id, name: sfMatches[1].team2Name };
+
+      nextMatches.push({
+        id: Date.now().toString() + Math.random(),
+        team1Id: finalist1.id,
+        team2Id: finalist2.id,
+        team1Name: finalist1.name,
+        team2Name: finalist2.name,
+        team1Score: 0,
+        team2Score: 0,
+        round: 'final',
+        phase: 'cup',
+        matchNumber: 1,
+        isCompleted: false,
+        court: null
+      });
+
+      // Bronsmatch
+      const bronze1 = sfMatches[0].team1Score > sfMatches[0].team2Score ? 
+        { id: sfMatches[0].team2Id, name: sfMatches[0].team2Name } : 
+        { id: sfMatches[0].team1Id, name: sfMatches[0].team1Name };
+      
+      const bronze2 = sfMatches[1].team1Score > sfMatches[1].team2Score ? 
+        { id: sfMatches[1].team2Id, name: sfMatches[1].team2Name } : 
+        { id: sfMatches[1].team1Id, name: sfMatches[1].team1Name };
+
+      nextMatches.push({
+        id: Date.now().toString() + Math.random(),
+        team1Id: bronze1.id,
+        team2Id: bronze2.id,
+        team1Name: bronze1.name,
+        team2Name: bronze2.name,
+        team1Score: 0,
+        team2Score: 0,
+        round: 'bronze',
+        phase: 'cup',
+        matchNumber: 2,
+        isCompleted: false,
+        court: null
+      });
+    }
+
+    if (nextMatches.length > 0) {
+      const updatedTournament = {
+        ...tournament,
+        matches: [...tournament.matches, ...nextMatches]
+      };
+
+      setTournaments(prev => prev.map(t => 
+        t.id === selectedTournamentId ? updatedTournament : t
+      ));
+    }
+  }, [selectedTournamentId, tournaments]);
 
   // Förbättrade Print-funktioner med spelare, ranking och licensnummer
   const generatePrintContent = useCallback((tournament, type) => {
@@ -1454,6 +1780,207 @@ const App = () => {
     );
   }
 
+  // 🌐 LIVE VIEW - Publikt skärm för projektor
+  if (isLiveView) {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) {
+      setIsLiveView(false);
+      return null;
+    }
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e40af 100%)',
+        padding: '40px',
+        color: 'white',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        {/* Close Live View Button */}
+        <button
+          onClick={() => setIsLiveView(false)}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            color: 'white',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            fontSize: '24px',
+            cursor: 'pointer',
+            zIndex: 1000,
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+          onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+        >
+          ×
+        </button>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '64px', fontWeight: '800', margin: '0 0 16px 0', textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}>
+            🏆 {tournament.name}
+          </h1>
+          <div style={{ fontSize: '24px', opacity: 0.9 }}>
+            {tournament.currentPhase === 'swiss' ? `Swiss Rond ${tournament.currentRound}` :
+             tournament.currentPhase === 'cup' ? 'Cup-spel' :
+             tournament.currentPhase === 'setup' ? 'Förberedelse' : 'Avslutad'}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', maxWidth: '1600px', margin: '0 auto' }}>
+          {/* Ranking */}
+          <div>
+            <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '20px' }}>📊 Ranking</h2>
+            <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', padding: '20px', color: '#1e293b' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(45deg, #3b82f6, #1e40af)', color: 'white' }}>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '18px' }}>#</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '18px' }}>Lag</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '18px' }}>V-F</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '18px' }}>Poäng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...tournament.teams]
+                    .sort((a, b) => {
+                      if (b.points !== a.points) return b.points - a.points;
+                      return (b.buchholz || 0) - (a.buchholz || 0);
+                    })
+                    .map((team, index) => (
+                      <tr key={team.id} style={{
+                        background: index % 2 === 0 ? '#f8fafc' : 'white',
+                        borderBottom: '1px solid #e2e8f0'
+                      }}>
+                        <td style={{ padding: '16px', fontSize: '20px', fontWeight: '700', color: index < 3 ? '#3b82f6' : '#64748b' }}>
+                          {index + 1}
+                          {index === 0 && ' 🥇'}
+                          {index === 1 && ' 🥈'}
+                          {index === 2 && ' 🥉'}
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '20px', fontWeight: '600' }}>{team.name}</td>
+                        <td style={{ padding: '16px', fontSize: '20px', textAlign: 'center', color: '#64748b' }}>
+                          {team.wins || 0}-{team.losses || 0}
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '28px', fontWeight: '700', textAlign: 'center', color: '#3b82f6' }}>
+                          {team.points || 0}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pågående matcher */}
+          <div>
+            <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '20px' }}>🎯 Pågående matcher</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {tournament.matches.filter(m => !m.isCompleted).length > 0 ? (
+                tournament.matches.filter(m => !m.isCompleted).map(match => (
+                  <div key={match.id} style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: '20px',
+                    padding: '24px',
+                    color: '#1e293b',
+                    border: '3px solid #fbbf24',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '600', marginBottom: '12px' }}>
+                      {match.phase === 'swiss' ? `Swiss Rond ${match.round}` :
+                       match.round === 'qf' ? 'Kvartsfinal' :
+                       match.round === 'sf' ? 'Semifinal' :
+                       match.round === 'final' ? '🏆 FINAL' :
+                       match.round === 'bronze' ? '🥉 Bronsmatch' : 'Match'}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '700', flex: 1 }}>{match.team1Name}</div>
+                      <div style={{ fontSize: '32px', fontWeight: '700', color: '#64748b', padding: '0 20px' }}>vs</div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', flex: 1, textAlign: 'right' }}>{match.team2Name}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '20px',
+                  padding: '40px',
+                  textAlign: 'center',
+                  color: '#64748b'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600' }}>Alla matcher är klara!</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Stats */}
+        <div style={{
+          marginTop: '40px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '20px',
+          maxWidth: '1200px',
+          margin: '40px auto 0'
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>👥</div>
+            <div style={{ fontSize: '36px', fontWeight: '700' }}>{tournament.teams.length}</div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>Lag</div>
+          </div>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+            <div style={{ fontSize: '36px', fontWeight: '700' }}>{tournament.matches.filter(m => m.isCompleted).length}</div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>Klara</div>
+          </div>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏳</div>
+            <div style={{ fontSize: '36px', fontWeight: '700' }}>{tournament.matches.filter(m => !m.isCompleted).length}</div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>Kvarstående</div>
+          </div>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>
+            <div style={{ fontSize: '36px', fontWeight: '700' }}>
+              {tournament.currentPhase === 'swiss' ? tournament.currentRound : tournament.currentPhase === 'cup' ? 'Cup' : '-'}
+            </div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>Fas</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Tournament View - Nu med faktisk funktionalitet v2
   const tournament = tournaments.find(t => t.id === selectedTournamentId);
   
@@ -1723,9 +2250,107 @@ const App = () => {
             </button>
 
             <button
-              onClick={() => alert('Här skulle matchresultat registreras:\n\n• Visa aktuella matcher\n• Registrera poäng och resultat\n• Uppdatera ranking automatiskt\n• Visa nästa ronds parningar\n\nI en fullständig version skulle detta öppna matchhantering.')}
+              onClick={startSwissRound}
+              disabled={tournament.teams.length < 4 || (tournament.currentPhase === 'swiss' && tournament.matches.some(m => m.phase === 'swiss' && m.round === tournament.currentRound && !m.isCompleted))}
               style={{
-                background: 'linear-gradient(45deg, #3b82f6, #1e40af)',
+                background: tournament.teams.length < 4 ? 'linear-gradient(45deg, #9ca3af, #6b7280)' : 'linear-gradient(45deg, #f59e0b, #d97706)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: tournament.teams.length < 4 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+                opacity: tournament.teams.length < 4 ? 0.5 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (tournament.teams.length >= 4) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(245, 158, 11, 0.5)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (tournament.teams.length >= 4) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(245, 158, 11, 0.4)';
+                }
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚡</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Starta Swiss-rond</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Automatisk parning</div>
+            </button>
+
+            <button
+              onClick={startCupPhase}
+              disabled={tournament.currentPhase !== 'swiss' || tournament.currentRound < tournament.settings.swissRounds}
+              style={{
+                background: tournament.currentPhase === 'swiss' && tournament.currentRound >= tournament.settings.swissRounds ? 'linear-gradient(45deg, #ec4899, #db2777)' : 'linear-gradient(45deg, #9ca3af, #6b7280)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: tournament.currentPhase === 'swiss' && tournament.currentRound >= tournament.settings.swissRounds ? 'pointer' : 'not-allowed',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(236, 72, 153, 0.4)',
+                opacity: tournament.currentPhase === 'swiss' && tournament.currentRound >= tournament.settings.swissRounds ? 1 : 0.5
+              }}
+              onMouseEnter={(e) => {
+                if (tournament.currentPhase === 'swiss' && tournament.currentRound >= tournament.settings.swissRounds) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(236, 72, 153, 0.5)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (tournament.currentPhase === 'swiss' && tournament.currentRound >= tournament.settings.swissRounds) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(236, 72, 153, 0.4)';
+                }
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🏆</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Starta Cup-spel</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Top 8 till slutspel</div>
+            </button>
+
+            {tournament.currentPhase === 'cup' && tournament.matches.filter(m => m.phase === 'cup' && m.isCompleted).length > 0 && (
+              <button
+                onClick={advanceCupRound}
+                style={{
+                  background: 'linear-gradient(45deg, #8b5cf6, #7c3aed)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(139, 92, 246, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(139, 92, 246, 0.4)';
+                }}
+              >
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>➡️</div>
+                <div style={{ fontWeight: '700', marginBottom: '4px' }}>Nästa Cup-rond</div>
+                <div style={{ fontSize: '14px', opacity: 0.9 }}>Semifinal/Final</div>
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsLiveView(true)}
+              style={{
+                background: 'linear-gradient(45deg, #06b6d4, #0891b2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '16px',
@@ -1734,20 +2359,20 @@ const App = () => {
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.4)'
               }}
               onMouseEnter={(e) => {
                 e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.5)';
+                e.target.style.boxShadow = '0 8px 25px rgba(6, 182, 212, 0.5)';
               }}
               onMouseLeave={(e) => {
                 e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
+                e.target.style.boxShadow = '0 4px 15px rgba(6, 182, 212, 0.4)';
               }}
             >
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎯</div>
-              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Hantera matcher</div>
-              <div style={{ fontSize: '14px', opacity: 0.9 }}>Registrera resultat</div>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🌐</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Live Resultat-tavla</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>För projektor/storskärm</div>
             </button>
           </div>
 
@@ -1928,8 +2553,282 @@ const App = () => {
                   cursor: 'pointer'
                 }}
               >
-                ➕ Lägg till första laget
+                ➞ Lägg till första laget
               </button>
+            </div>
+          )}
+
+          {/* 🎯 MATCHER & RESULTAT */}
+          {tournament.matches.length > 0 && (
+            <div style={{
+              marginTop: '30px',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '2px solid #f59e0b'
+            }}>
+              <h3 style={{
+                margin: '0 0 20px 0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#78350f',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                🎯 Matcher ({tournament.matches.filter(m => !m.isCompleted).length} pågående)
+              </h3>
+
+              {/* Aktuella matcher */}
+              {tournament.matches.filter(m => !m.isCompleted).length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ color: '#92400e', marginBottom: '12px', fontSize: '16px' }}>
+                    ⏱️ Aktuella matcher
+                  </h4>
+                  <div style={{ display: 'grid', gap: '12px' }}>
+                    {tournament.matches.filter(m => !m.isCompleted).map(match => (
+                      <div key={match.id} style={{
+                        background: 'white',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        border: '2px solid #fbbf24',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                          <div style={{ flex: 1, minWidth: '200px' }}>
+                            <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', marginBottom: '8px' }}>
+                              {match.phase === 'swiss' ? `Swiss Rond ${match.round}` : 
+                               match.round === 'qf' ? 'Kvartsfinal' :
+                               match.round === 'sf' ? 'Semifinal' :
+                               match.round === 'final' ? '🏆 FINAL' :
+                               match.round === 'bronze' ? '🥉 Bronsmatch' : 'Match'}
+                            </div>
+                            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>
+                              {match.team1Name} <span style={{ color: '#64748b', fontWeight: '400' }}>vs</span> {match.team2Name}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="number"
+                              min="0"
+                              max="13"
+                              placeholder="0"
+                              style={{
+                                width: '60px',
+                                padding: '8px',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                textAlign: 'center',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '8px'
+                              }}
+                              id={`team1-${match.id}`}
+                            />
+                            <span style={{ fontSize: '20px', fontWeight: '700', color: '#64748b' }}>-</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="13"
+                              placeholder="0"
+                              style={{
+                                width: '60px',
+                                padding: '8px',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                textAlign: 'center',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '8px'
+                              }}
+                              id={`team2-${match.id}`}
+                            />
+                            <button
+                              onClick={() => {
+                                const score1 = document.getElementById(`team1-${match.id}`).value;
+                                const score2 = document.getElementById(`team2-${match.id}`).value;
+                                if (score1 && score2) {
+                                  updateMatchResult(match.id, score1, score2);
+                                } else {
+                                  alert('Fyll i båda poängen!');
+                                }
+                              }}
+                              style={{
+                                background: 'linear-gradient(45deg, #10b981, #059669)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✔️ Spara
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Slutförda matcher */}
+              {tournament.matches.filter(m => m.isCompleted).length > 0 && (
+                <div>
+                  <h4 style={{ color: '#92400e', marginBottom: '12px', fontSize: '16px' }}>
+                    ✅ Slutförda matcher ({tournament.matches.filter(m => m.isCompleted).length})
+                  </h4>
+                  <div style={{ display: 'grid', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                    {tournament.matches.filter(m => m.isCompleted).map(match => (
+                      <div key={match.id} style={{
+                        background: 'white',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <div style={{ fontSize: '14px', color: '#1e293b' }}>
+                          <span style={{ fontWeight: '600' }}>{match.team1Name}</span>
+                          <span style={{ color: '#64748b', margin: '0 8px' }}>vs</span>
+                          <span style={{ fontWeight: '600' }}>{match.team2Name}</span>
+                        </div>
+                        <div style={{ fontSize: '16px', fontWeight: '700', color: match.team1Score > match.team2Score ? '#10b981' : match.team2Score > match.team1Score ? '#ef4444' : '#64748b' }}>
+                          {match.team1Score} - {match.team2Score}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 📊 RANKING & STATISTIK */}
+          {tournament.teams.length > 0 && tournament.currentPhase !== 'setup' && (
+            <div style={{
+              marginTop: '30px',
+              background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '2px solid #8b5cf6'
+            }}>
+              <h3 style={{
+                margin: '0 0 20px 0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#5b21b6',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                📊 Ranking & Poäng
+              </h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  background: 'white',
+                  borderRadius: '12px',
+                  overflow: 'hidden'
+                }}>
+                  <thead>
+                    <tr style={{ background: 'linear-gradient(45deg, #8b5cf6, #7c3aed)' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', color: 'white', fontWeight: '600' }}>#</th>
+                      <th style={{ padding: '12px', textAlign: 'left', color: 'white', fontWeight: '600' }}>Lag</th>
+                      <th style={{ padding: '12px', textAlign: 'center', color: 'white', fontWeight: '600' }}>Matcher</th>
+                      <th style={{ padding: '12px', textAlign: 'center', color: 'white', fontWeight: '600' }}>V</th>
+                      <th style={{ padding: '12px', textAlign: 'center', color: 'white', fontWeight: '600' }}>F</th>
+                      <th style={{ padding: '12px', textAlign: 'center', color: 'white', fontWeight: '600' }}>Poäng</th>
+                      <th style={{ padding: '12px', textAlign: 'center', color: 'white', fontWeight: '600' }}>Buchholz</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...tournament.teams]
+                      .sort((a, b) => {
+                        if (b.points !== a.points) return b.points - a.points;
+                        return (b.buchholz || 0) - (a.buchholz || 0);
+                      })
+                      .map((team, index) => (
+                        <tr key={team.id} style={{
+                          background: index % 2 === 0 ? '#faf5ff' : 'white',
+                          borderBottom: '1px solid #e9d5ff'
+                        }}>
+                          <td style={{ padding: '12px', fontWeight: '700', color: index < 3 ? '#8b5cf6' : '#64748b' }}>
+                            {index + 1}
+                            {index === 0 && ' 🥇'}
+                            {index === 1 && ' 🥈'}
+                            {index === 2 && ' 🥉'}
+                          </td>
+                          <td style={{ padding: '12px', fontWeight: '600', color: '#1e293b' }}>{team.name}</td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: '#64748b' }}>
+                            {(team.wins || 0) + (team.losses || 0) + (team.draws || 0)}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: '#10b981', fontWeight: '600' }}>
+                            {team.wins || 0}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: '#ef4444', fontWeight: '600' }}>
+                            {team.losses || 0}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center', fontSize: '18px', fontWeight: '700', color: '#8b5cf6' }}>
+                            {team.points || 0}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: '500' }}>
+                            {team.buchholz || 0}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Statistik */}
+              <div style={{
+                marginTop: '20px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px'
+              }}>
+                <div style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  border: '1px solid #ddd6fe'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🎯</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#5b21b6' }}>
+                    {tournament.matches.filter(m => m.isCompleted).length}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#64748b' }}>Spelade matcher</div>
+                </div>
+                <div style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  border: '1px solid #ddd6fe'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#5b21b6' }}>
+                    {tournament.matches.filter(m => !m.isCompleted).length}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#64748b' }}>Kvarstående</div>
+                </div>
+                <div style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  border: '1px solid #ddd6fe'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚡</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#5b21b6' }}>
+                    {tournament.currentPhase === 'swiss' ? tournament.currentRound : tournament.currentPhase === 'cup' ? 'Cup' : '-'}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#64748b' }}>Aktuell fas</div>
+                </div>
+              </div>
             </div>
           )}
         </div>

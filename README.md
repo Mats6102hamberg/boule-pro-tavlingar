@@ -10,16 +10,45 @@
 
 Boule PRO Turnering är ett fullständigt turneringshanteringssystem byggt för bouletävlingar. Systemet hanterar allt från laganmälan till matchparningar med Swiss System, slutspel och professionella utskrifter.
 
-### ✨ Huvudfunktioner
+### 🌟 Huvudfunktioner
 
-- 🏆 **Turneringshantering** - Skapa och hantera flera turneringar samtidigt
-- 👥 **Lagregistrering** - Singel, Dubbel och Trippel med spelarinfo
-- 🎲 **Swiss System** - Automatisk matchparning baserad på ranking
-- 🏅 **Ålderskategorier** - Öppen, V55, V65, V75
-- 📊 **Ranking & Statistik** - Buchholz-poäng och automatisk rankingberäkning
-- 🖨️ **Utskrifter** - Professionella utskrifter för anslagstavla
-- 💾 **Auto-sparning** - All data sparas automatiskt i webbläsaren
-- 📱 **Responsiv design** - Fungerar på desktop, tablet och mobil
+### ⚡ Swiss System (NYT!)
+- ✅ **Automatisk matchparning** - Intelligent parning baserat på ranking
+- ✅ **Buchholz-beräkning** - Avancerad tiebreaker-metod
+- ✅ **Undvik omatcher** - Systemet säkerställer att samma lag inte möts igen
+- ✅ **Flera ronder** - Kör så många Swiss-ronder som behövs
+
+### 🎯 Matchhantering (NYT!)
+- ✅ **Live resultatregistrering** - Registrera matchresultat direkt i appen
+- ✅ **Poängsystem** - Automatisk poängberäkning (2p vinst, 1p oavgjort)
+- ✅ **Matchstatus** - Se pågående och slutförda matcher
+- ✅ **Matchhistorik** - Komplett översikt över alla spelade matcher
+
+### 🏆 Cup/Slutspel (NYT!)
+- ✅ **Kvartsfinal-bracket** - Automatisk generering av cup-träd
+- ✅ **Semifinal & Final** - Automatisk avancering till nästa rond
+- ✅ **Bronsmatch** - Match om 3:e plats
+- ✅ **Top 8-seeding** - De 8 bästa lagen från Swiss går vidare
+
+### 🌐 Live Resultat-tavla (NYT!)
+- ✅ **Publik skärm** - Perfekt för projektor/storskärm
+- ✅ **Realtidsuppdatering** - Ranking och matcher uppdateras live
+- ✅ **Stor text** - Lätt att läsa på avstånd
+- ✅ **Professionell design** - Imponerande visuell presentation
+
+### 📊 Avancerad Statistik (NYT!)
+- ✅ **Ranking-tabell** - Komplett med vinster, förluster, poäng och Buchholz
+- ✅ **Medaljer** - Visuell markering av topp 3
+- ✅ **Matchstatistik** - Antal spelade, pågående och klara matcher
+- ✅ **Fas-översikt** - Tydlig indikation på aktuell turneringsfas
+
+### 🏅 Grundfunktioner
+- ✅ **Turneringshantering** - Skapa och hantera flera turneringar samtidigt
+- ✅ **Lag & Spelare** - Hantera singel, dubbel och trippel-lag
+- ✅ **Ålderskategorier** - Stöd för Öppen, V55, V65, V75
+- ✅ **Print-funktioner** - Professionella utskrifter för anslagstavla
+- ✅ **Auto-sparning** - All data sparas lokalt i webbläsaren
+- ✅ **Responsiv design** - Fungerar på desktop, tablet och mobil
 
 ## 🚀 Snabbstart
 
