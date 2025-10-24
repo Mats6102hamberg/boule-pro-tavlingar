@@ -1359,7 +1359,12 @@ const App = () => {
               </button>
               
               <button
-                onClick={() => setIsInstructionsModalOpen(true)}
+                onClick={() => {
+                  const featuresSection = document.getElementById('features-section');
+                  if (featuresSection) {
+                    featuresSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 style={{
                   background: 'rgba(255, 255, 255, 0.2)',
                   color: 'white',
@@ -1430,6 +1435,233 @@ const App = () => {
                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>💾</div>
                 <h3 style={{ fontSize: '18px', margin: '0 0 8px 0', fontWeight: '600' }}>Automatisk</h3>
                 <p style={{ fontSize: '14px', opacity: 0.8, margin: 0 }}>Sparar data automatiskt</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 🎯 FEATURES SEKTION - Klickbara funktioner */}
+        <div id="features-section" style={{
+          maxWidth: '1400px',
+          margin: '-60px auto 60px auto',
+          padding: '0 32px',
+          position: 'relative',
+          zIndex: 10
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '48px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h2 style={{
+              fontSize: '36px',
+              fontWeight: '700',
+              background: 'linear-gradient(45deg, #1e40af, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: '32px',
+              textAlign: 'center'
+            }}>
+              🎯 Alla Funktioner
+            </h2>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '16px',
+              marginBottom: '48px'
+            }}>
+              {[
+                { icon: '⚡', title: 'Swiss System', desc: 'Automatisk intelligent matchparning', id: 'swiss' },
+                { icon: '🎯', title: 'Matchhantering', desc: 'Live resultatregistrering 0-13', id: 'match' },
+                { icon: '🏆', title: 'Cup/Slutspel', desc: 'Kvartsfinal, Semi, Final', id: 'cup' },
+                { icon: '🌐', title: 'Live Resultat-tavla', desc: 'Fullskärm för projektor', id: 'live' },
+                { icon: '📊', title: 'Avancerad Statistik', desc: 'Ranking + Buchholz', id: 'stats' },
+                { icon: '💾', title: 'Export/Import', desc: 'Backup & restore', id: 'backup' },
+                { icon: '🏟️', title: 'Banhantering', desc: 'Tilldela matcher till banor', id: 'court' },
+                { icon: '⏱️', title: 'Tidtabell', desc: 'Schema med starttider', id: 'schedule' },
+                { icon: '🖨️', title: 'Utskrifter', desc: 'Diplom & Matchprotokoll', id: 'print' },
+                { icon: '📱', title: 'PWA', desc: 'Installera som app', id: 'pwa' },
+                { icon: '📸', title: 'QR-koder', desc: 'Generera för laginformation', id: 'qr' },
+                { icon: '🌍', title: 'Multi-language', desc: 'Svenska/Engelska', id: 'language' }
+              ].map((feature, index) => (
+                <a
+                  key={index}
+                  href={`#feature-${feature.id}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    padding: '20px',
+                    borderRadius: '16px',
+                    border: '2px solid #e2e8f0',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    display: 'block'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.borderColor = '#3b82f6';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>{feature.icon}</div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0', color: '#1e293b' }}>
+                    {feature.title}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{feature.desc}</p>
+                </a>
+              ))}
+            </div>
+
+            {/* INSTRUKTIONER FÖR VARJE FUNKTION */}
+            <div style={{
+              borderTop: '2px solid #e2e8f0',
+              paddingTop: '48px'
+            }}>
+              <h3 style={{
+                fontSize: '28px',
+                fontWeight: '700',
+                color: '#1e293b',
+                marginBottom: '32px',
+                textAlign: 'center'
+              }}>
+                📖 Instruktioner
+              </h3>
+
+              {/* Swiss System */}
+              <div id="feature-swiss" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  ⚡ Swiss System
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Swiss System parar automatiskt lag baserat på deras ranking. Bästa lagen möter varandra för rättvis tävling.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka "Starta Swiss-rond" för att generera matcher</li>
+                  <li>Registrera resultat 0-13 för varje match</li>
+                  <li>Ranking uppdateras automatiskt med Buchholz-beräkning</li>
+                  <li>Starta nästa rond när alla matcher är klara</li>
+                </ul>
+              </div>
+
+              {/* Matchhantering */}
+              <div id="feature-match" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  🎯 Matchhantering
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Registrera resultat live och se statistik uppdateras i realtid.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Skriv in poäng för varje lag (0-13)</li>
+                  <li>Tilldela bana och starttid vid behov</li>
+                  <li>Klicka "Spara Resultat" när matchen är klar</li>
+                  <li>Ranking uppdateras automatiskt</li>
+                </ul>
+              </div>
+
+              {/* Cup/Slutspel */}
+              <div id="feature-cup" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  🏆 Cup/Slutspel
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Efter Swiss-ronderna startar Cup-spel med Top 8 lag.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka "Starta Cup-spel" när Swiss-fas är klar</li>
+                  <li>Kvartsfinal: 1 vs 8, 2 vs 7, 3 vs 6, 4 vs 5</li>
+                  <li>Semifinal: Vinnare möts</li>
+                  <li>Final + Bronsmatch för 3:e plats</li>
+                </ul>
+              </div>
+
+              {/* Live Resultat-tavla */}
+              <div id="feature-live" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  🌐 Live Resultat-tavla
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Visa live-resultat på storskärm eller projektor för publiken.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka "Live Resultat-tavla" i turneringen</li>
+                  <li>Fullskärmsläge (F11) för bästa vy</li>
+                  <li>Uppdateras automatiskt när resultat registreras</li>
+                  <li>Perfekt för anslagstavla eller projektor</li>
+                </ul>
+              </div>
+
+              {/* Export/Import */}
+              <div id="feature-backup" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  💾 Export/Import (Backup)
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Säkerhetskopiera turneringar till JSON-fil och återställ vid behov.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka "💾 Exportera Turnering" för att spara</li>
+                  <li>Klicka "📂 Importera Turnering" för att återställa</li>
+                  <li>Välj JSON-fil från din dator</li>
+                  <li>All data återställs exakt som den var</li>
+                </ul>
+              </div>
+
+              {/* QR-koder */}
+              <div id="feature-qr" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  📸 QR-koder
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Generera QR-koder med komplett laginformation.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka 📸-ikonen på ett lag</li>
+                  <li>QR-kod genereras med alla uppgifter</li>
+                  <li>Ladda ner som PNG-bild</li>
+                  <li>Skanna med mobil för snabb åtkomst</li>
+                </ul>
+              </div>
+
+              {/* PWA */}
+              <div id="feature-pwa" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  📱 PWA - Installera som App
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Installera Boule PRO som en native app på mobil eller desktop.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li><strong>Chrome/Edge:</strong> Klicka installera-ikonen i adressfältet</li>
+                  <li><strong>Safari (iOS):</strong> Dela → "Lägg till på hemskärmen"</li>
+                  <li><strong>Android:</strong> Chrome-meny → "Installera appen"</li>
+                  <li>Fungerar offline och som native app!</li>
+                </ul>
+              </div>
+
+              {/* Multi-language */}
+              <div id="feature-language" style={{ marginBottom: '40px', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+                <h4 style={{ fontSize: '22px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
+                  🌍 Multi-language
+                </h4>
+                <p style={{ color: '#475569', lineHeight: '1.8', marginBottom: '12px' }}>
+                  Växla mellan svenska och engelska.
+                </p>
+                <ul style={{ color: '#64748b', lineHeight: '1.8' }}>
+                  <li>Klicka "🌍 English" uppe till höger</li>
+                  <li>Alla viktiga texter översätts</li>
+                  <li>Klicka igen för att byta tillbaka till Svenska</li>
+                  <li>Fler språk kommer snart (Franska, Tyska, m.fl.)</li>
+                </ul>
               </div>
             </div>
           </div>
