@@ -1,71 +1,217 @@
-# Getting Started with Create React App
+# 🎯 Boule PRO Turnering
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Professionellt turneringssystem för Pétanque/Boule med Swiss System och Cup-spel**
 
-## Available Scripts
+![React](https://img.shields.io/badge/React-19.1-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-Active-success)
 
-In the project directory, you can run:
+## 📖 Om projektet
 
-### `npm start`
+Boule PRO Turnering är ett fullständigt turneringshanteringssystem byggt för bouletävlingar. Systemet hanterar allt från laganmälan till matchparningar med Swiss System, slutspel och professionella utskrifter.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### ✨ Huvudfunktioner
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- 🏆 **Turneringshantering** - Skapa och hantera flera turneringar samtidigt
+- 👥 **Lagregistrering** - Singel, Dubbel och Trippel med spelarinfo
+- 🎲 **Swiss System** - Automatisk matchparning baserad på ranking
+- 🏅 **Ålderskategorier** - Öppen, V55, V65, V75
+- 📊 **Ranking & Statistik** - Buchholz-poäng och automatisk rankingberäkning
+- 🖨️ **Utskrifter** - Professionella utskrifter för anslagstavla
+- 💾 **Auto-sparning** - All data sparas automatiskt i webbläsaren
+- 📱 **Responsiv design** - Fungerar på desktop, tablet och mobil
 
-### `npm test`
+## 🚀 Snabbstart
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Installation
 
-### `npm run build`
+```bash
+# Klona repositoryt
+git clone https://github.com/Mats6102hamberg/boule-pro-tavlingar.git
+cd boule-pro-tavlingar
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Installera dependencies
+npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Starta utvecklingsserver
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Appen öppnas automatiskt på [http://localhost:3000](http://localhost:3000)
 
-### `npm run eject`
+## 📋 Användning
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Skapa en ny turnering
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Klicka på **"➕ Ny tävling"** på dashboard
+2. Fyll i turneringsnamn och inställningar:
+   - Lagtyp (Singel/Dubbel/Trippel)
+   - Ålderskategori
+   - Antal Swiss-ronder (2-4)
+   - Lag per pool (3-4)
+3. Klicka **"Skapa tävling"**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Registrera lag
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. Öppna turneringen från dashboard
+2. Klicka **"➕ Lägg till lag"**
+3. Fyll i:
+   - Lagnamn
+   - Spelarnamn
+   - Licensnummer (valfritt)
+   - Kontaktinfo (valfritt)
+4. Klicka **"Lägg till lag"**
 
-## Learn More
+### Starta turneringen
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. När alla lag är registrerade klickar du **"🎲 Starta Swiss-ronder"**
+2. Systemet parar automatiskt ihop lagen
+3. Registrera matchresultat
+4. Kör nästa rond eller gå vidare till slutspel
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Skriv ut dokument
 
-### Code Splitting
+1. Klicka på **"🖨️ Skriv ut"**
+2. Välj vad du vill skriva ut:
+   - 🏆 Aktuell ranking
+   - 🎯 Spelschema
+   - 👥 Lag-lista
+3. Klicka **"Skriv ut nu"**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🛠️ Teknisk stack
 
-### Analyzing the Bundle Size
+- **Frontend:** React 19.1
+- **Styling:** Inline CSS med CSS-animationer
+- **State Management:** React Hooks (useState, useEffect, useCallback)
+- **Data Storage:** localStorage (browser)
+- **Build Tool:** Create React App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📁 Projektstruktur
 
-### Making a Progressive Web App
+```
+boule-pro-tavlingar/
+├── public/             # Statiska filer
+├── src/
+│   ├── App.js         # Huvudkomponent med all logik
+│   ├── App.css        # Styling
+│   ├── index.js       # Entry point
+│   └── index.css      # Global styling
+├── package.json       # Dependencies
+└── README.md          # Denna fil
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 🎨 Features i detalj
 
-### Advanced Configuration
+### Swiss System
+- Automatisk parning baserad på poäng och Buchholz
+- Undviker omatcher (samma lag möts inte två gånger)
+- 2-4 kvalronder innan slutspel
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Ranking-system
+- **Poäng:** 2p för vinst, 1p för oavgjort, 0p för förlust
+- **Buchholz:** Summan av motståndarnas poäng
+- **Sortering:** Först efter poäng, sedan Buchholz
 
-### Deployment
+### Utskrifter
+- Professionell layout med turneringsinfo
+- Timestamp för transparens
+- A4-format, perfekt för anslagstavla
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📱 Browser-stöd
 
-### `npm run build` fails to minify
+- ✅ Chrome/Edge (senaste versionen)
+- ✅ Firefox (senaste versionen)
+- ✅ Safari (senaste versionen)
+- ⚠️ Kräver localStorage-stöd
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# Boule Pro Tävlingar - Deployment Test Thu Sep 11 09:17:07 CEST 2025
+## 🔧 Utveckling
+
+### Tillgängliga kommandon
+
+```bash
+# Starta utvecklingsserver
+npm start
+
+# Kör tester
+npm test
+
+# Bygg för produktion
+npm run build
+
+# Analys av bundle size
+npm run build --stats
+```
+
+### Kodstandard
+- React Hooks för state management
+- Functional components
+- useCallback för optimering
+- React.memo för tunga komponenter
+
+## 📦 Deployment
+
+### Bygg för produktion
+
+```bash
+npm run build
+```
+
+Detta skapar en optimerad build i `build/` mappen.
+
+### Deploy till Netlify/Vercel
+
+```bash
+# Netlify
+npm install -g netlify-cli
+netlify deploy --prod --dir=build
+
+# Vercel
+npm install -g vercel
+vercel --prod
+```
+
+## 🐛 Felsökning
+
+### Appen startar inte
+```bash
+# Rensa cache och reinstallera
+rm -rf node_modules package-lock.json
+npm install
+npm start
+```
+
+### Data försvinner
+- Kontrollera att localStorage inte är blockerat i webbläsaren
+- Använd inte privat läge/inkognito (data sparas inte permanent)
+
+### Print fungerar inte
+- Aktivera "Bakgrundsgrafik" i utskriftsinställningar
+- Kontrollera att popups inte är blockerade
+
+## 🤝 Bidra
+
+Bidrag är välkomna! Så här gör du:
+
+1. Forka projektet
+2. Skapa en feature branch (`git checkout -b feature/AmazingFeature`)
+3. Committa dina ändringar (`git commit -m 'Add some AmazingFeature'`)
+4. Pusha till branchen (`git push origin feature/AmazingFeature`)
+5. Öppna en Pull Request
+
+## 📝 Licens
+
+MIT License - se [LICENSE](LICENSE) för detaljer
+
+## 👨‍💻 Utvecklare
+
+Skapad av [Mats Hamberg](https://github.com/Mats6102hamberg)
+
+## 📧 Kontakt
+
+Frågor eller feedback? Skapa en [issue](https://github.com/Mats6102hamberg/boule-pro-tavlingar/issues) på GitHub.
+
+---
+
+**Uppdaterad:** 2025-10-24  
+**Version:** 1.0.0  
+**Status:** ✅ Produktionsklar

@@ -1,6 +1,15 @@
 {
   "name": "boule-pro-tavlingar",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Professionellt turneringssystem för Pétanque/Boule med Swiss System och Cup-spel",
+  "author": "Mats Hamberg <mats6102hamberg@gmail.com>",
+  "license": "MIT",
+  "keywords": ["boule", "petanque", "turnering", "swiss-system", "cup", "turneringshantering"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mats6102hamberg/boule-pro-tavlingar.git"
+  },
+  "homepage": "https://github.com/Mats6102hamberg/boule-pro-tavlingar#readme",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",

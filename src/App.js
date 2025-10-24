@@ -945,7 +945,6 @@ const App = () => {
         <Modal
           isOpen={isAddTeamModalOpen}
           onClose={() => {
-            console.log('Stänger team modal');
             setIsAddTeamModalOpen(false);
           }}
           title="Lägg till nytt lag"
@@ -1656,10 +1655,7 @@ const App = () => {
           }}>
             <button
               onClick={() => {
-                console.log('Klickade på lägg till lag (huvudknapp)');
-                console.log('Tournament:', tournament);
                 const teamType = tournament?.settings?.teamType || 'dubbel';
-                console.log('Team type:', teamType);
                 updateTeamPlayers(teamType);
                 setIsAddTeamModalOpen(true);
               }}
@@ -1917,10 +1913,7 @@ const App = () => {
               </p>
               <button
                 onClick={() => {
-                  console.log('Klickade på lägg till första laget');
-                  console.log('Tournament:', tournament);
                   const teamType = tournament?.settings?.teamType || 'dubbel';
-                  console.log('Team type:', teamType);
                   updateTeamPlayers(teamType);
                   setIsAddTeamModalOpen(true);
                 }}
