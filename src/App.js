@@ -44,7 +44,14 @@ const translations = {
     losses: 'F',
     points: 'Poäng',
     diploma: 'Diplom',
-    matchProtocol: 'Matchprotokoll'
+    matchProtocol: 'Matchprotokoll',
+    deleteTournament: 'Ta bort',
+    viewTournament: 'Visa',
+    instructions: 'Instruktioner',
+    tournaments: 'Turneringar',
+    noTournaments: 'Inga turneringar',
+    createFirst: 'Skapa din första turnering',
+    back: 'Tillbaka'
   },
   en: {
     dashboard: 'Dashboard',
@@ -86,7 +93,14 @@ const translations = {
     losses: 'L',
     points: 'Points',
     diploma: 'Diploma',
-    matchProtocol: 'Match Protocol'
+    matchProtocol: 'Match Protocol',
+    deleteTournament: 'Delete',
+    viewTournament: 'View',
+    instructions: 'Instructions',
+    tournaments: 'Tournaments',
+    noTournaments: 'No tournaments',
+    createFirst: 'Create your first tournament',
+    back: 'Back'
   }
 };
 
@@ -1310,7 +1324,6 @@ const App = () => {
             }}>
               Swiss System • Monrad • Pool-spel med professionell utskrift
             </p>
-            
             <div style={{
               display: 'flex',
               gap: '20px',
@@ -1342,7 +1355,7 @@ const App = () => {
                   e.target.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.4)';
                 }}
               >
-                🚀 Skapa Ny Tävling
+                🚀 {t.createTournament}
               </button>
               
               <button
@@ -1482,7 +1495,7 @@ const App = () => {
                   color: '#0c4a6e',
                   marginBottom: '16px'
                 }}>
-                  Välkommen till Boule Pro!
+                  {language === 'sv' ? 'Välkommen till Boule Pro!' : 'Welcome to Boule Pro!'}
                 </h3>
                 <p style={{ 
                   color: '#0369a1', 
@@ -1492,7 +1505,7 @@ const App = () => {
                   margin: '0 auto 32px auto',
                   lineHeight: '1.6'
                 }}>
-                  Skapa din första professionella turnering med avancerade utskriftsmöjligheter och automatisk Swiss System-parning.
+                  {language === 'sv' ? 'Skapa din första professionella turnering med avancerade utskriftsmöjligheter och automatisk Swiss System-parning.' : 'Create your first professional tournament with advanced printing and automatic Swiss System pairing.'}
                 </p>
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
@@ -1518,7 +1531,7 @@ const App = () => {
                     e.target.style.boxShadow = '0 8px 24px rgba(14, 165, 233, 0.4)';
                   }}
                 >
-                  ✨ Skapa Din Första Tävling
+                  ✨ {language === 'sv' ? 'Skapa Din Första Tävling' : 'Create Your First Tournament'}
                 </button>
               </div>
             ) : (
