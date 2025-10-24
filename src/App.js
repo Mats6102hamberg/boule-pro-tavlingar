@@ -640,9 +640,274 @@ const App = () => {
     }
   }, [selectedTournamentId, tournaments]);
 
+  // 💾 EXPORT/IMPORT - Backup & Restore
+  const exportTournament = useCallback(() => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    const dataStr = JSON.stringify(tournament, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${tournament.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [selectedTournamentId, tournaments]);
+
+  const exportAllTournaments = useCallback(() => {
+    const dataStr = JSON.stringify(tournaments, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Alla_Turneringar_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [tournaments]);
+
+  const importTournament = useCallback((event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        
+        // Kolla om det är en array (alla turneringar) eller ett objekt (en turnering)
+        if (Array.isArray(imported)) {
+          // Importera alla turneringar
+          setTournaments(prev => {
+            const existingIds = new Set(prev.map(t => t.id));
+            const newTournaments = imported.filter(t => !existingIds.has(t.id));
+            return [...prev, ...newTournaments];
+          });
+          alert(`Importerade ${imported.length} turneringar!`);
+        } else {
+          // Importera en turnering
+          setTournaments(prev => {
+            const exists = prev.some(t => t.id === imported.id);
+            if (exists) {
+              return prev.map(t => t.id === imported.id ? imported : t);
+            }
+            return [...prev, imported];
+          });
+          alert(`Turnering "${imported.name}" importerad!`);
+        }
+      } catch (error) {
+        alert('Fel vid import: Ogiltig fil-format!');
+        console.error(error);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+  }, []);
+
+  // 🏟️ BANHANTERING - Tilldela matcher till banor
+  const assignCourt = useCallback((matchId, courtNumber) => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    const updatedMatches = tournament.matches.map(m => 
+      m.id === matchId ? { ...m, court: courtNumber } : m
+    );
+
+    const updatedTournament = {
+      ...tournament,
+      matches: updatedMatches
+    };
+
+    setTournaments(prev => prev.map(t => 
+      t.id === selectedTournamentId ? updatedTournament : t
+    ));
+  }, [selectedTournamentId, tournaments]);
+
+  // ⏱️ TIDTABELL - Schemaläggning
+  const setMatchStartTime = useCallback((matchId, startTime) => {
+    const tournament = tournaments.find(t => t.id === selectedTournamentId);
+    if (!tournament) return;
+
+    const updatedMatches = tournament.matches.map(m => 
+      m.id === matchId ? { ...m, startTime: startTime } : m
+    );
+
+    const updatedTournament = {
+      ...tournament,
+      matches: updatedMatches
+    };
+
+    setTournaments(prev => prev.map(t => 
+      t.id === selectedTournamentId ? updatedTournament : t
+    ));
+  }, [selectedTournamentId, tournaments]);
+
   // Förbättrade Print-funktioner med spelare, ranking och licensnummer
   const generatePrintContent = useCallback((tournament, type) => {
     const timestamp = new Date().toLocaleString('sv-SE');
+    
+    // 🏆 DIPLOM - För topp 3
+    if (type === 'diploma') {
+      const sortedTeams = [...tournament.teams].sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        return (b.buchholz || 0) - (a.buchholz || 0);
+      });
+      
+      const winner = sortedTeams[0];
+      if (!winner) return '';
+
+      return `
+        <html>
+          <head>
+            <style>
+              @page { margin: 0; }
+              body {
+                margin: 0;
+                padding: 40px;
+                font-family: 'Georgia', serif;
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              .diploma {
+                background: white;
+                padding: 60px;
+                border: 20px double #f59e0b;
+                max-width: 800px;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+              }
+              .diploma h1 {
+                font-size: 48px;
+                color: #92400e;
+                margin: 20px 0;
+                text-transform: uppercase;
+                letter-spacing: 4px;
+              }
+              .trophy { font-size: 120px; margin: 20px 0; }
+              .place { font-size: 36px; color: #f59e0b; margin: 20px 0; font-weight: bold; }
+              .team { font-size: 32px; color: #1e293b; margin: 20px 0; font-weight: bold; }
+              .players { font-size: 20px; color: #64748b; margin: 10px 0; }
+              .tournament { font-size: 24px; color: #475569; margin: 30px 0; }
+              .signature { margin-top: 60px; font-size: 18px; color: #64748b; }
+            </style>
+          </head>
+          <body>
+            <div class="diploma">
+              <div class="trophy">🏆</div>
+              <h1>Diplom</h1>
+              <div class="place">1:a Plats</div>
+              <div class="team">${winner.name}</div>
+              <div class="players">${winner.players.join(' & ')}</div>
+              <div class="tournament">${tournament.name}</div>
+              <div class="tournament">${tournament.date}</div>
+              <div class="signature">
+                <p>___________________________</p>
+                <p>Tävlingsarrangör</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+    
+    // 📋 MATCHPROTOKOLL - Detaljerat
+    if (type === 'matchprotocol') {
+      return `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .protocol { max-width: 800px; margin: 0 auto; border: 2px solid #000; padding: 30px; }
+              .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+              .match-info { margin: 20px 0; }
+              .match-info div { margin: 10px 0; font-size: 16px; }
+              .label { font-weight: bold; display: inline-block; width: 150px; }
+              .teams { margin: 30px 0; }
+              .team { border: 1px solid #000; padding: 15px; margin: 10px 0; }
+              .score-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              .score-table th, .score-table td { border: 1px solid #000; padding: 10px; text-align: center; }
+              .signature-section { margin-top: 60px; display: flex; justify-content: space-around; }
+              .signature-box { text-align: center; }
+              .signature-line { width: 200px; border-bottom: 1px solid #000; margin: 40px auto 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="protocol">
+              <div class="header">
+                <h1>🎯 MATCHPROTOKOLL</h1>
+                <h2>${tournament.name}</h2>
+              </div>
+              
+              <div class="match-info">
+                <div><span class="label">Datum:</span> ${tournament.date}</div>
+                <div><span class="label">Tävlingstyp:</span> ${tournament.settings.teamType.toUpperCase()}</div>
+                <div><span class="label">Kategori:</span> ${tournament.settings.ageCategory}</div>
+                <div><span class="label">Matchnummer:</span> _______</div>
+                <div><span class="label">Bana:</span> _______</div>
+                <div><span class="label">Starttid:</span> _______</div>
+              </div>
+
+              <div class="teams">
+                <div class="team">
+                  <h3>Lag 1: _________________________</h3>
+                  <p>Spelare: _________________________</p>
+                </div>
+                <div class="team">
+                  <h3>Lag 2: _________________________</h3>
+                  <p>Spelare: _________________________</p>
+                </div>
+              </div>
+
+              <table class="score-table">
+                <thead>
+                  <tr>
+                    <th>Måne</th>
+                    <th>Lag 1</th>
+                    <th>Lag 2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Array.from({length: 15}, (_, i) => `
+                    <tr>
+                      <td>${i + 1}</td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  `).join('')}
+                  <tr style="font-weight: bold; background: #f3f4f6;">
+                    <td>TOTALT</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="signature-section">
+                <div class="signature-box">
+                  <div class="signature-line"></div>
+                  <p>Domare</p>
+                </div>
+                <div class="signature-box">
+                  <div class="signature-line"></div>
+                  <p>Lag 1</p>
+                </div>
+                <div class="signature-box">
+                  <div class="signature-line"></div>
+                  <p>Lag 2</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+    }
     
     const baseStyles = `
       <style>
@@ -1689,7 +1954,7 @@ const App = () => {
                   />
                   <span><strong>🎯 Spelschema</strong> - Alla matcher per rond</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', cursor: 'pointer', background: '#fafafa', borderRadius: '8px' }}>
                   <input
                     type="radio"
                     value="teams"
@@ -1697,6 +1962,26 @@ const App = () => {
                     onChange={(e) => setPrintOptions({...printOptions, type: e.target.value})}
                   />
                   <span><strong>👥 Lag-lista</strong> - Alla anmälda lag och spelare</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', cursor: 'pointer', background: '#fef3c7', borderRadius: '8px', border: '2px solid #f59e0b' }}>
+                  <input
+                    type="radio"
+                    value="diploma"
+                    checked={printOptions.type === 'diploma'}
+                    onChange={(e) => setPrintOptions({...printOptions, type: e.target.value})}
+                  />
+                  <span><strong>🏆 Diplom</strong> - Vackert diplom för vinnaren</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', cursor: 'pointer', background: '#e0f2fe', borderRadius: '8px', border: '2px solid #0ea5e9' }}>
+                  <input
+                    type="radio"
+                    value="matchprotocol"
+                    checked={printOptions.type === 'matchprotocol'}
+                    onChange={(e) => setPrintOptions({...printOptions, type: e.target.value})}
+                  />
+                  <span><strong>📋 Matchprotokoll</strong> - Tomt protokoll för domare</span>
                 </label>
               </div>
             </div>
@@ -2374,6 +2659,69 @@ const App = () => {
               <div style={{ fontWeight: '700', marginBottom: '4px' }}>Live Resultat-tavla</div>
               <div style={{ fontSize: '14px', opacity: 0.9 }}>För projektor/storskärm</div>
             </button>
+
+            <button
+              onClick={exportTournament}
+              style={{
+                background: 'linear-gradient(45deg, #14b8a6, #0d9488)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(20, 184, 166, 0.4)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 25px rgba(20, 184, 166, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(20, 184, 166, 0.4)';
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>💾</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Exportera Turnering</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Backup till JSON-fil</div>
+            </button>
+
+            <label style={{
+              background: 'linear-gradient(45deg, #a855f7, #9333ea)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '20px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 8px 25px rgba(168, 85, 247, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 15px rgba(168, 85, 247, 0.4)';
+            }}>
+              <input
+                type="file"
+                accept=".json"
+                onChange={importTournament}
+                style={{ display: 'none' }}
+              />
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📂</div>
+              <div style={{ fontWeight: '700', marginBottom: '4px' }}>Importera Turnering</div>
+              <div style={{ fontSize: '14px', opacity: 0.9 }}>Läs in från backup</div>
+            </label>
           </div>
 
           {/* Tournament Info */}
@@ -2594,17 +2942,49 @@ const App = () => {
                         border: '2px solid #fbbf24',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                           <div style={{ flex: 1, minWidth: '200px' }}>
-                            <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', marginBottom: '8px' }}>
-                              {match.phase === 'swiss' ? `Swiss Rond ${match.round}` : 
-                               match.round === 'qf' ? 'Kvartsfinal' :
-                               match.round === 'sf' ? 'Semifinal' :
-                               match.round === 'final' ? '🏆 FINAL' :
-                               match.round === 'bronze' ? '🥉 Bronsmatch' : 'Match'}
+                            <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', marginBottom: '8px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              <span>
+                                {match.phase === 'swiss' ? `Swiss Rond ${match.round}` : 
+                                 match.round === 'qf' ? 'Kvartsfinal' :
+                                 match.round === 'sf' ? 'Semifinal' :
+                                 match.round === 'final' ? '🏆 FINAL' :
+                                 match.round === 'bronze' ? '🥉 Bronsmatch' : 'Match'}
+                              </span>
+                              {match.court && <span style={{ background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>🏟️ Bana {match.court}</span>}
+                              {match.startTime && <span style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px' }}>⏰ {match.startTime}</span>}
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>
+                            <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>
                               {match.team1Name} <span style={{ color: '#64748b', fontWeight: '400' }}>vs</span> {match.team2Name}
+                            </div>
+                            {/* Bana och Tid inputs */}
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder="Bana"
+                                value={match.court || ''}
+                                onChange={(e) => assignCourt(match.id, parseInt(e.target.value) || null)}
+                                style={{
+                                  width: '70px',
+                                  padding: '6px',
+                                  fontSize: '14px',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px'
+                                }}
+                              />
+                              <input
+                                type="time"
+                                value={match.startTime || ''}
+                                onChange={(e) => setMatchStartTime(match.id, e.target.value)}
+                                style={{
+                                  padding: '6px',
+                                  fontSize: '14px',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px'
+                                }}
+                              />
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
