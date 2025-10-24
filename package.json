@@ -4,7 +4,14 @@
   "description": "Professionellt turneringssystem för Pétanque/Boule med Swiss System och Cup-spel",
   "author": "Mats Hamberg <mats6102hamberg@gmail.com>",
   "license": "MIT",
-  "keywords": ["boule", "petanque", "turnering", "swiss-system", "cup", "turneringshantering"],
+  "keywords": [
+    "boule",
+    "petanque",
+    "turnering",
+    "swiss-system",
+    "cup",
+    "turneringshantering"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Mats6102hamberg/boule-pro-tavlingar.git"
@@ -16,6 +23,7 @@
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-scripts": "5.0.1",

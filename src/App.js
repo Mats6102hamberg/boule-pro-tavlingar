@@ -1,4 +1,94 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import './App.css';
+import QRCode from 'qrcode';
+
+// 🌍 TRANSLATIONS - Multi-language support
+const translations = {
+  sv: {
+    dashboard: 'Dashboard',
+    createTournament: 'Skapa Ny Tävling',
+    tournamentName: 'Turneringsnamn',
+    date: 'Datum',
+    teamType: 'Lagtyp',
+    single: 'Singel',
+    double: 'Dubbel',
+    triple: 'Trippel',
+    ageCategory: 'Ålderskategori',
+    open: 'Öppen',
+    swissRounds: 'Swiss-ronder',
+    teamsPerPool: 'Lag per pool',
+    create: 'Skapa',
+    cancel: 'Avbryt',
+    addTeam: 'Lägg till lag',
+    teamName: 'Lagnamn',
+    players: 'Spelare',
+    licenseNumber: 'Licensnummer',
+    contactInfo: 'Kontaktinformation',
+    startSwissRound: 'Starta Swiss-rond',
+    startCupPhase: 'Starta Cup-spel',
+    nextCupRound: 'Nästa Cup-rond',
+    liveResultBoard: 'Live Resultat-tavla',
+    exportTournament: 'Exportera Turnering',
+    importTournament: 'Importera Turnering',
+    ranking: 'Ranking',
+    matches: 'Matcher',
+    teams: 'Lag',
+    statistics: 'Statistik',
+    print: 'Skriv ut',
+    court: 'Bana',
+    startTime: 'Starttid',
+    save: 'Spara',
+    ongoing: 'Pågående',
+    completed: 'Slutförda',
+    wins: 'V',
+    losses: 'F',
+    points: 'Poäng',
+    diploma: 'Diplom',
+    matchProtocol: 'Matchprotokoll'
+  },
+  en: {
+    dashboard: 'Dashboard',
+    createTournament: 'Create New Tournament',
+    tournamentName: 'Tournament Name',
+    date: 'Date',
+    teamType: 'Team Type',
+    single: 'Single',
+    double: 'Double',
+    triple: 'Triple',
+    ageCategory: 'Age Category',
+    open: 'Open',
+    swissRounds: 'Swiss Rounds',
+    teamsPerPool: 'Teams per Pool',
+    create: 'Create',
+    cancel: 'Cancel',
+    addTeam: 'Add Team',
+    teamName: 'Team Name',
+    players: 'Players',
+    licenseNumber: 'License Number',
+    contactInfo: 'Contact Info',
+    startSwissRound: 'Start Swiss Round',
+    startCupPhase: 'Start Cup Phase',
+    nextCupRound: 'Next Cup Round',
+    liveResultBoard: 'Live Result Board',
+    exportTournament: 'Export Tournament',
+    importTournament: 'Import Tournament',
+    ranking: 'Ranking',
+    matches: 'Matches',
+    teams: 'Teams',
+    statistics: 'Statistics',
+    print: 'Print',
+    court: 'Court',
+    startTime: 'Start Time',
+    save: 'Save',
+    ongoing: 'Ongoing',
+    completed: 'Completed',
+    wins: 'W',
+    losses: 'L',
+    points: 'Points',
+    diploma: 'Diploma',
+    matchProtocol: 'Match Protocol'
+  }
+};
 
 // Add CSS animations with better browser support - RUN ONLY ONCE - Updated
 if (!document.getElementById('boule-styles')) {
@@ -200,6 +290,10 @@ const App = () => {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
   const [isLiveView, setIsLiveView] = useState(false);
+  const [language, setLanguage] = useState('sv'); // 🌍 Språk: sv eller en
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [selectedTeamForQR, setSelectedTeamForQR] = useState(null);
+  const [qrCodeDataURL, setQrCodeDataURL] = useState('');
   const [printOptions, setPrintOptions] = useState({
     type: 'ranking',
     includeLogo: true,
@@ -746,6 +840,42 @@ const App = () => {
     ));
   }, [selectedTournamentId, tournaments]);
 
+  // 📸 QR-KOD - Generera QR för laginformation
+  const generateQRCode = useCallback(async (team, tournament) => {
+    const teamInfo = {
+      lag: team.name,
+      spelare: team.players.join(', '),
+      turnering: tournament.name,
+      datum: tournament.date,
+      licens: team.licenseNumber || 'Ingen',
+      kontakt: team.contactInfo || 'Ingen'
+    };
+    
+    const dataString = JSON.stringify(teamInfo, null, 2);
+    
+    try {
+      const qrDataURL = await QRCode.toDataURL(dataString, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: '#0ea5e9',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeDataURL(qrDataURL);
+      setSelectedTeamForQR(team);
+      setQrModalOpen(true);
+    } catch (error) {
+      console.error('QR-kod fel:', error);
+    }
+  }, []);
+
+  // 🌍 MULTI-LANGUAGE - Toggle mellan svenska och engelska
+  const t = translations[language];
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'sv' ? 'en' : 'sv');
+  };
+
   // Förbättrade Print-funktioner med spelare, ranking och licensnummer
   const generatePrintContent = useCallback((tournament, type) => {
     const timestamp = new Date().toLocaleString('sv-SE');
@@ -1084,6 +1214,40 @@ const App = () => {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         position: 'relative'
       }}>
+        {/* 🌍 Språkväxlingsknapp - Fixed top right */}
+        <button
+          onClick={toggleLanguage}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(10px)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '50px',
+            padding: '12px 24px',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            zIndex: 9999,
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+            e.target.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+            e.target.style.transform = 'scale(1)';
+          }}
+        >
+          🌍 {language === 'sv' ? 'English' : 'Svenska'}
+        </button>
+
         {/* Hero Section */}
         <div style={{
           background: 'linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%)',
@@ -2809,34 +2973,55 @@ const App = () => {
                       }}>
                         {index + 1}. {team.name}
                       </h4>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Vill du ta bort laget "${team.name}"?`)) {
-                            const updatedTournament = {
-                              ...tournament,
-                              teams: tournament.teams.filter(t => t.id !== team.id)
-                            };
-                            setTournaments(prev => prev.map(t => 
-                              t.id === selectedTournamentId ? updatedTournament : t
-                            ));
-                          }
-                        }}
-                        style={{
-                          background: 'linear-gradient(45deg, #ef4444, #dc2626)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          width: '24px',
-                          height: '24px',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        ✕
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => generateQRCode(team, tournament)}
+                          style={{
+                            background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            width: '24px',
+                            height: '24px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Generera QR-kod"
+                        >
+                          📸
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Vill du ta bort laget "${team.name}"?`)) {
+                              const updatedTournament = {
+                                ...tournament,
+                                teams: tournament.teams.filter(t => t.id !== team.id)
+                              };
+                              setTournaments(prev => prev.map(t => 
+                                t.id === selectedTournamentId ? updatedTournament : t
+                              ));
+                            }
+                          }}
+                          style={{
+                            background: 'linear-gradient(45deg, #ef4444, #dc2626)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            width: '24px',
+                            height: '24px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                     <div style={{
                       fontSize: '14px',
@@ -3212,6 +3397,110 @@ const App = () => {
             </div>
           )}
         </div>
+
+        {/* 📸 QR-KOD MODAL */}
+        {qrModalOpen && selectedTeamForQR && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '20px',
+              padding: '40px',
+              maxWidth: '500px',
+              width: '90%',
+              textAlign: 'center',
+              position: 'relative'
+            }}>
+              <button
+                onClick={() => setQrModalOpen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  fontSize: '18px',
+                  cursor: 'pointer'
+                }}
+              >
+                ×
+              </button>
+
+              <h2 style={{ color: '#1e293b', marginBottom: '20px' }}>
+                📸 QR-Kod för {selectedTeamForQR.name}
+              </h2>
+
+              {qrCodeDataURL && (
+                <img
+                  src={qrCodeDataURL}
+                  alt="QR Code"
+                  style={{
+                    width: '100%',
+                    maxWidth: '400px',
+                    height: 'auto',
+                    margin: '20px 0',
+                    border: '4px solid #0ea5e9',
+                    borderRadius: '12px'
+                  }}
+                />
+              )}
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '16px',
+                borderRadius: '12px',
+                textAlign: 'left',
+                fontSize: '14px',
+                color: '#64748b',
+                marginBottom: '20px'
+              }}>
+                <p style={{ margin: '4px 0' }}><strong>Lag:</strong> {selectedTeamForQR.name}</p>
+                <p style={{ margin: '4px 0' }}><strong>Spelare:</strong> {selectedTeamForQR.players.join(', ')}</p>
+                {selectedTeamForQR.licenseNumber && (
+                  <p style={{ margin: '4px 0' }}><strong>Licens:</strong> {selectedTeamForQR.licenseNumber}</p>
+                )}
+                {selectedTeamForQR.contactInfo && (
+                  <p style={{ margin: '4px 0' }}><strong>Kontakt:</strong> {selectedTeamForQR.contactInfo}</p>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.download = `QR_${selectedTeamForQR.name}.png`;
+                  link.href = qrCodeDataURL;
+                  link.click();
+                }}
+                style={{
+                  background: 'linear-gradient(45deg, #0ea5e9, #0284c7)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                💾 Ladda ner QR-kod
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
